@@ -134,8 +134,8 @@ jobs:
           # =========================================================================
           # CORREÇÃO DO ERRO: Formatação isolada para evitar conflito de chaves {}
           # =========================================================================
-          verde_add = f"$\\color{{#2ea44f}}{{\\mathbf{{+{total_additions:,}}}}}}$"
-          vermelho_del = f"$\\color{{#f85149}}{{\\mathbf{{-{total_deletions:,}}}}}}$"
+          verde_add = r"$\color{#2ea44f}{\mathbf{+" + f"{total_additions:,}" + r"}}$"
+          vermelho_del = r"$\color{#f85149}{\mathbf{-" + f"{total_deletions:,}" + r"}}$
           # =========================================================================
 
           # Template do texto final limpo
