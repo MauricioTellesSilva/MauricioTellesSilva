@@ -1,7 +1,7 @@
 name: Update Profile README Text Stats
 on:
   schedule:
-    - cron: "0 */6 * * *" # Atualiza a cada 6 horas
+    - cron: "0 */12 * * *" # Atualiza a cada 12 horas
   workflow_dispatch: # Permite rodar manualmente
   push:
     branches: ["main", "master"]
@@ -31,7 +31,6 @@ jobs:
           python - << 'EOF'
           import os
           import requests
-          import re
           import time
 
           token = os.getenv("GH_TOKEN")
@@ -49,7 +48,7 @@ jobs:
               print("Erro crítico: Nenhum arquivo README.md foi encontrado!")
               exit(1)
 
-          # 1. Buscar total de Commits e Pull Requests globais via Search API
+          # 1. Buscar total de Commits e Pull Requests globais via API de Busca
           search_commits_count = 0
           try:
               commit_search = requests.get(f"https://api.github.com/search/commits?q=author:{username}", headers=headers).json()
@@ -66,18 +65,26 @@ jobs:
           except Exception as e:
               print(f"Aviso ao buscar PRs: {e}")
 
-          # 2. Paginação para buscar repositórios (Tenta incluir privados se o token permitir)
+          # 2. Paginação abrangente de repositórios (Públicos, Privados, Colaborações e Organizações)
           repos = []
           page = 1
-          base_url = "https://api.github.com/user/repos?type=owner&"
-          test_resp = requests.get(base_url + "per_page=1", headers=headers)
-          if test_resp.status_code != 200:
-              base_url = f"https://api.github.com/users/{username}/repos?"
-
-          while True:
-              try:
-                  repos_url = f"{base_url}per_page=100&page={page}"
-                  resp = requests.get(repos_url, headers=headers)
+          
+          # Tenta usar a rota autenticada do usuário ativo para maior abrangência
+          resp = requests.get(f"https://api.github.com/user/repos?per_page=100&affiliation=owner,collaborator,organization_member&page={page}", headers=headers)
+          if resp.status_code == 200:
+              while True:
+                  data = resp.json()
+                  if not data or not isinstance(data, list):
+                      break
+                  repos.extend(data)
+                  if len(data) < 100:
+                      break
+                  page += 1
+                  resp = requests.get(f"https://api.github.com/user/repos?per_page=100&affiliation=owner,collaborator,organization_member&page={page}", headers=headers)
+          else:
+              print("Aviso: Rota privada indisponível. Usando fallback de repositórios públicos...")
+              while True:
+                  resp = requests.get(f"https://api.github.com/users/{username}/repos?per_page=100&page={page}", headers=headers)
                   if resp.status_code != 200:
                       break
                   data = resp.json()
@@ -87,49 +94,53 @@ jobs:
                   if len(data) < 100:
                       break
                   page += 1
-              except Exception as e:
-                  print(f"Erro ao paginar repositórios: {e}")
-                  break
 
           total_additions = 0
           total_deletions = 0
           total_commits_from_stats = 0
           languages_map = {}
 
-          # 3. Varrer o histórico de cada repositório com tratamento para cache (Erro 202)
+          print(f"Varrendo um total de {len(repos)} repositórios encontrados...")
+
+          # 3. Análise profunda de cada repositório com correção de maiúsculas/minúsculas (.lower())
           for repo in repos:
               if repo.get("fork"): 
                   continue
               repo_name = repo.get("name")
               repo_owner = repo.get("owner", {}).get("login", username)
               
-              # Loop de tentativa para lidar com o cache de estatísticas do GitHub (Resposta 202)
+              # Loop adaptativo de repetição para aguardar o cache de estatísticas (Resposta 202 do GitHub)
               stats_data = None
               stats_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/stats/contributors"
-              for retry in range(3):
+              
+              for retry in range(5): # Até 5 tentativas com maior tempo de folga
                   try:
                       stats_resp = requests.get(stats_url, headers=headers)
                       if stats_resp.status_code == 200:
                           stats_data = stats_resp.json()
                           break
                       elif stats_resp.status_code == 202:
-                          print(f"GitHub está gerando os dados para {repo_name}, aguardando...")
-                          time.sleep(2)
+                          print(f"-> GitHub compilando dados de [{repo_name}]. Aguardando 3s... (Tentativa {retry+1}/5)")
+                          time.sleep(3)
                       else:
                           break
                   except Exception as e:
-                      print(f"Erro de conexão no repo {repo_name}: {e}")
+                      print(f"Erro de conexão no repositório {repo_name}: {e}")
                       break
 
+              # Processamento dos dados numéricos coletados
               if isinstance(stats_data, list):
                   for contributor in stats_data:
-                      if isinstance(contributor, dict) and contributor.get("author", {}).get("login") == username:
-                          for week in contributor.get("weeks", []):
-                              total_additions += week.get("a", 0)
-                              total_deletions += week.get("d", 0)
-                              total_commits_from_stats += week.get("c", 0)
+                      if isinstance(contributor, dict):
+                          login_api = contributor.get("author", {}).get("login", "")
+                          # correcao: Comparação em lowercase evita ignorar seus dados por conflito de maiúsculas
+                          if login_api.lower() == username.lower():
+                              for week in contributor.get("weeks", []):
+                                  total_additions += week.get("a", 0)
+                                  total_deletions += week.get("d", 0)
+                                  total_commits_from_stats += week.get("c", 0)
               
-              # Buscar dados de linguagens
+              # Coleta volumétrica das linguagens de programação
               try:
                   lang_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/languages"
                   lang_resp = requests.get(lang_url, headers=headers)
@@ -139,14 +150,14 @@ jobs:
                           for lang, bytes_count in lang_data.items():
                               languages_map[lang] = languages_map.get(lang, 0) + bytes_count
               except Exception as e:
-                  print(f"Erro de linguagem no repo {repo_name}: {e}")
+                  print(f"Erro ao processar linguagens do repo {repo_name}: {e}")
 
-          # Definir o melhor número de commits encontrado
+          # Define o teto máximo de commits detectados para consistência
           final_commits = max(search_commits_count, total_commits_from_stats)
           if final_commits == 0 and search_commits_count == 0:
               final_commits = "Disponível no painel"
 
-          # Calcular porcentagem global das linguagens
+          # Processamento do ranking de linguagens dominantes
           total_bytes = sum(languages_map.values())
           sorted_langs = sorted(languages_map.items(), key=lambda x: x[1], reverse=True)[:4]
           lang_text = []
@@ -156,13 +167,13 @@ jobs:
           
           languages_formatted = ", ".join(lang_text) if lang_text else "Identificando..."
 
-          # Formatação das strings numéricas e blocos LaTeX
+          # Montagem segura das strings de linhas com LaTeX
           str_additions = "{:,}".format(total_additions)
           str_deletions = "{:,}".format(total_deletions)
           verde_add = "$\\color{#2ea44f}{\\mathbf{+" + str_additions + "}}$"
           vermelho_del = "$\\color{#f85149}{\\mathbf{-" + str_deletions + "}}$"
 
-          # Template bruto do texto final
+          # Template bruto estruturado
            custom_text = f"""### 📈 Minhas Estatísticas de Desenvolvimento
 
 
@@ -174,32 +185,42 @@ jobs:
 
           _Atualizado automaticamente via Python Script (metrics.yml)._
           """
+          # Formata limpando indentações indesejadas geradas pelo heredoc do terminal
+          custom_text = "\n".join([line.strip() for line in custom_text_raw.strip().split("\n")])
 
-          
-          custom_text = "\n".join([line.strip() for line in custom_text_raw.split("\n")])
-
-          # Leitura do README atual
+          # Anti copia
           with open(readme_file, "r", encoding="utf-8") as f:
               readme_content = f.read()
 
-          pattern = r".*?"
-          
-          # Anti clone (commit tentativa 4 cores)
-          if readme_content.count("") > 1:
-              print("Detectados blocos duplicados antigos. Resetando e limpando o README...")
-              readme_content = re.sub(pattern, "", readme_content, flags=re.DOTALL)
-              updated_content = readme_content.rstrip() + "\n\n" + custom_text
-          else:
-              if not re.search(pattern, readme_content, flags=re.DOTALL):
-                  # Se não existirem as tags, anexa ao final
-                  updated_content = readme_content.rstrip() + "\n\n" + custom_text
-              else:
-                  # Substituição segura usando lambda
-                  updated_content = re.sub(pattern, lambda m: custom_text, readme_content, flags=re.DOTALL)
+          start_tag = ""
+          end_tag = ""
 
-          # Salva o arquivo corrigido
+          # Se houver qualquer bagunça ou duplicados, limpamos tudo do arquivo antes de injetar o novo
+          if start_tag in readme_content and end_tag in readme_content:
+              parts = readme_content.split(start_tag, 1)
+              before_stats = parts[0]
+              after_start = parts[1]
+              
+              if end_tag in after_start:
+                  after_stats_parts = after_start.split(end_tag, 1)
+                  after_stats = after_stats_parts[1]
+                  
+                  # Remove qualquer outra tag orfã ou duplicada perdida pelo arquivo
+                  before_stats = before_stats.replace(start_tag, "").replace(end_tag, "")
+                  after_stats = after_stats.replace(start_tag, "").replace(end_tag, "")
+                  
+                  updated_content = before_stats.rstrip() + "\n\n" + custom_text + "\n\n" + after_stats.lstrip()
+              else:
+                  readme_content = readme_content.replace(start_tag, "").replace(end_tag, "")
+                  updated_content = readme_content.rstrip() + "\n\n" + custom_text
+          else:
+              readme_content = readme_content.replace(start_tag, "").replace(end_tag, "")
+              updated_content = readme_content.rstrip() + "\n\n" + custom_text
+
+          # Escreve o resultado perfeitamente limpo de volta
           with open(readme_file, "w", encoding="utf-8") as f:
               f.write(updated_content)
+          print("README.md atualizado com sucesso e livre de duplicatas!")
           EOF
 
       - name: Commit and Push Changes
