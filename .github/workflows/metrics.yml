@@ -1,7 +1,7 @@
 name: Update Profile README Text Stats
 on:
   schedule:
-    - cron: "0 */12 * * *" # Atualiza a cada 12 horas
+    - cron: "0 */4 * * *" # Atualiza a cada 4 horas
   workflow_dispatch: # Permite rodar manualmente
   push:
     branches: ["main", "master"]
@@ -165,7 +165,7 @@ jobs:
                               total_deletions += repo_del
                               print(f"  ✅ [{repo_name}]: +{repo_add} | -{repo_del} linhas coletadas do seu usuário.")
                       else:
-                          print(f"  ⚠️ [{repo_name}]: Ainda processando em segundo plano. Entrará na próxima janela de 12h.")
+                          print(f"  ⚠️ [{repo_name}]: Ainda processando em segundo plano. Entrará na próxima janela de 4h.")
                   except:
                       pass
 
