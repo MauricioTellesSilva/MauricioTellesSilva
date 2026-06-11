@@ -56,7 +56,7 @@ jobs:
               if isinstance(commit_search, dict) and "total_count" in commit_search:
                   search_commits_count = commit_search["total_count"]
           except Exception as e:
-              print(f"Aviso ao buscar commits via search: {e}")
+              print(f"Aviso ao buscar commits: {e}")
 
           total_prs = "Disponível no painel"
           try:
@@ -66,7 +66,7 @@ jobs:
           except Exception as e:
               print(f"Aviso ao buscar PRs: {e}")
 
-          # 2. Paginação abrangente de repositórios
+          # 2. Paginação de repositórios
           repos = []
           page = 1
           resp = requests.get(f"https://api.github.com/user/repos?per_page=100&affiliation=owner&page={page}", headers=headers)
@@ -84,10 +84,11 @@ jobs:
           total_additions = 0
           total_deletions = 0
           languages_map = {}
+          pending_repos = []
 
           print(f"Varrendo um total de {len(repos)} repositórios encontrados...\n")
 
-          # 3. Análise de linhas via Code Frequency com Backoff Progressivo
+          # 3. PASSO 1: Disparo rápido e processamento dos caches quentes
           for repo in repos:
               if repo.get("fork"): 
                   continue
@@ -95,43 +96,26 @@ jobs:
               repo_owner = repo.get("owner", {}).get("login", username)
               
               cf_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/stats/code_frequency"
-              cf_data = None
               
-              # Delays progressivos para dar tempo ao cluster do GitHub (3s, 6s, 12s, 15s, 20s)
-              delays = [3, 6, 12, 15, 20]
-              for retry in range(5):
-                  try:
-                      cf_resp = requests.get(cf_url, headers=headers)
-                      if cf_resp.status_code == 200:
-                          cf_data = cf_resp.json()
-                          break
-                      elif cf_resp.status_code == 202:
-                          wait_time = delays[retry]
-                          print(f"  -> GitHub compilando linhas de [{repo_name}]. Aguardando {wait_time}s... (Tentativa {retry+1}/5)")
-                          time.sleep(wait_time)
-                      else:
-                          print(f"  -> Erro {cf_resp.status_code} ao acessar [{repo_name}]")
-                          break
-                  except Exception as e:
-                      print(f"  -> Erro de conexão em [{repo_name}]: {e}")
-                      break
+              try:
+                  cf_resp = requests.get(cf_url, headers=headers)
+                  if cf_resp.status_code == 200:
+                      cf_data = cf_resp.json()
+                      if isinstance(cf_data, list):
+                          for week in cf_data:
+                              if len(week) >= 3:
+                                  total_additions += week[1]
+                                  total_deletions += abs(week[2])
+                          print(f"  ✅ [{repo_name}]: Dados obtidos de primeira.")
+                  elif cf_resp.status_code == 202:
+                      print(f"  ⏳ [{repo_name}]: GitHub começou a calcular. Indo para a fila...")
+                      pending_repos.append((repo_name, cf_url))
+                  else:
+                      print(f"  -> Erro {cf_resp.status_code} ao acessar [{repo_name}]")
+              except Exception as e:
+                  print(f"  -> Erro de conexão em [{repo_name}]: {e}")
 
-              # Processamento do volume de linhas retornados
-              repo_add = 0
-              repo_del = 0
-              if isinstance(cf_data, list):
-                  for week in cf_data:
-                      if len(week) >= 3:
-                          repo_add += week[1]
-                          repo_del += abs(week[2]) # Transforma o valor negativo da API em absoluto
-                  
-                  print(f"  ✅ [{repo_name}]: +{repo_add} | -{repo_del} linhas obtidas com sucesso.")
-                  total_additions += repo_add
-                  total_deletions += repo_del
-              else:
-                  print(f"  ⚠️ Não foi possível obter dados estáveis para [{repo_name}] após tentativas.")
-              
-              # Coleta de linguagens de programação
+              # Coleta assíncrona de linguagens
               try:
                   lang_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/languages"
                   lang_resp = requests.get(lang_url, headers=headers)
@@ -142,6 +126,32 @@ jobs:
                               languages_map[lang] = languages_map.get(lang, 0) + bytes_count
               except:
                   pass
+
+          # 4. PASSO 2: Espera única e coleta dos pendentes
+          if pending_repos:
+              wait_time = 25
+              print(f"\n🤖 {len(pending_repos)} repositórios na fila. Aguardando {wait_time}s para processamento paralelo do GitHub...")
+              time.sleep(wait_time)
+              
+              for repo_name, cf_url in pending_repos:
+                  try:
+                      cf_resp = requests.get(cf_url, headers=headers)
+                      if cf_resp.status_code == 200:
+                          cf_data = cf_resp.json()
+                          if isinstance(cf_data, list):
+                              repo_add = 0
+                              repo_del = 0
+                              for week in cf_data:
+                                  if len(week) >= 3:
+                                      repo_add += week[1]
+                                      repo_del += abs(week[2])
+                              total_additions += repo_add
+                              total_deletions += repo_del
+                              print(f"  ✅ [{repo_name}]: +{repo_add} | -{repo_del} linhas coletadas pós-espera.")
+                      else:
+                          print(f"  ⚠️ [{repo_name}]: Ainda processando. Dados computarão na próxima execução automática.")
+                  except:
+                      pass
 
           print(f"\n⚡ CÁLCULO FINALIZADO: Total Adicionado: {total_additions} | Total Removido: {total_deletions}")
 
@@ -155,7 +165,7 @@ jobs:
           
           languages_formatted = ", ".join(lang_text) if lang_text else "Identificando..."
 
-          # Formatação das strings numéricas com separadores de milhares
+          # Formatação das strings numéricas
           str_additions = "{:,}".format(total_additions)
           str_deletions = "{:,}".format(total_deletions)
           verde_add = "$\\color{#2ea44f}{\\mathbf{+" + str_additions + "}}$"
@@ -175,7 +185,6 @@ jobs:
 
           custom_text = "\n".join([line.strip() for line in custom_text_raw.strip().split("\n")])
 
-          # Limpeza de blocos antigos e gravação segura
           with open(readme_file, "r", encoding="utf-8") as f:
               readme_content = f.read()
 
