@@ -1,19 +1,16 @@
 name: Update Profile README Text Stats
-
 on:
   schedule:
-    - cron: "0 */12 * * *"
-  workflow_dispatch:
+    - cron: "0 */12 * * *" # Atualiza a cada 12 horas
+  workflow_dispatch: # Permite rodar manualmente
   push:
     branches: ["main", "master"]
 
 jobs:
   update-readme:
     runs-on: ubuntu-latest
-
     permissions:
       contents: write
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -21,7 +18,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: '3.x'
 
       - name: Install Dependencies
         run: pip install requests
@@ -33,223 +30,193 @@ jobs:
         run: |
           python - << 'EOF'
           import os
-          import re
           import requests
+          import re
+          import time
 
           token = os.getenv("GH_TOKEN")
           username = os.getenv("GH_USERNAME")
+          headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
 
-          headers = {
-              "Authorization": f"token {token}",
-              "Accept": "application/vnd.github.v3+json"
-          }
-
+          # Localiza o arquivo README
           readme_file = None
-
           for f in os.listdir("."):
               if f.lower() == "readme.md":
                   readme_file = f
                   break
-
+          
           if not readme_file:
-              print("README.md não encontrado.")
+              print("Erro crítico: Nenhum arquivo README.md foi encontrado!")
               exit(1)
 
-          # ---------------------------------------------
-          # Estatísticas gerais
-          # ---------------------------------------------
-
+          # 1. Buscar estatísticas globais de Commits e PRs
           search_commits_count = 0
-
           try:
-              commit_search = requests.get(
-                  f"https://api.github.com/search/commits?q=author:{username}",
-                  headers=headers
-              ).json()
-
-              if "total_count" in commit_search:
+              commit_search = requests.get(f"https://api.github.com/search/commits?q=author:{username}", headers=headers).json()
+              if isinstance(commit_search, dict) and "total_count" in commit_search:
                   search_commits_count = commit_search["total_count"]
-
           except Exception as e:
-              print(f"Erro ao buscar commits: {e}")
+              print(f"Aviso ao buscar commits: {e}")
 
-          total_prs = 0
-
+          total_prs = "Disponível no painel"
           try:
-              pr_search = requests.get(
-                  f"https://api.github.com/search/issues?q=author:{username}+type:pr",
-                  headers=headers
-              ).json()
-
-              if "total_count" in pr_search:
+              pr_search = requests.get(f"https://api.github.com/search/issues?q=author:{username}+type:pr", headers=headers).json()
+              if isinstance(pr_search, dict) and "total_count" in pr_search:
                   total_prs = pr_search["total_count"]
-
           except Exception as e:
-              print(f"Erro ao buscar PRs: {e}")
+              print(f"Aviso ao buscar PRs: {e}")
 
-          # ---------------------------------------------
-          # Repositórios
-          # ---------------------------------------------
-
-          unique_repos = set()
+          # 2. Mapeamento estendido de repositórios (Meus + Colaborações + Orgs)
+          unique_repos = set() # Guarda tuplas de (nome_do_repo, dono_do_repo)
+          
           page = 1
-
           while True:
-              resp = requests.get(
-                  f"https://api.github.com/user/repos?per_page=100&page={page}",
-                  headers=headers
-              )
-
+              # Puxa repositórios vinculados ao token (todas as afiliações)
+              resp = requests.get(f"https://api.github.com/user/repos?per_page=100&page={page}", headers=headers)
               if resp.status_code != 200:
                   break
-
-              repos = resp.json()
-
-              if not repos:
+              data = resp.json()
+              if not data:
                   break
-
-              for repo in repos:
-                  if not repo.get("fork"):
-                      unique_repos.add(
-                          (repo["owner"]["login"], repo["name"])
-                      )
-
+              for r in data:
+                  if not r.get("fork"):
+                      unique_repos.add((r["name"], r["owner"]["login"]))
+              if len(data) < 100:
+                  break
               page += 1
+
+          # Captura extra: examinar commits recentes para achar repositórios externos participados
+          try:
+              recent_commits = requests.get(f"https://api.github.com/search/commits?q=author:{username}&per_page=100", headers=headers).json()
+              if isinstance(recent_commits, dict) and "items" in recent_commits:
+                  for item in recent_commits["items"]:
+                      r_info = item.get("repository", {})
+                      if r_info and not r_info.get("fork"):
+                          unique_repos.add((r_info["name"], r_info["owner"]["login"]))
+          except Exception as e:
+              print(f"Aviso ao rastrear repositórios por commits: {e}")
 
           total_additions = 0
           total_deletions = 0
           languages_map = {}
+          pending_repos = []
 
-          for owner, repo in unique_repos:
+          print(f"Varrendo um total de {len(unique_repos)} repositórios identificados (Dono/Membro/Colaborador)...\n")
 
+          # 3. PASSO 1: Chamada inicial aos Contribuidores (Exclusivo para suas linhas)
+          for repo_name, repo_owner in unique_repos:
+              stats_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/stats/contributors"
+              
               try:
-                  stats = requests.get(
-                      f"https://api.github.com/repos/{owner}/{repo}/stats/contributors",
-                      headers=headers
-                  )
-
-                  if stats.status_code == 200:
-
-                      data = stats.json()
-
-                      if isinstance(data, list):
-                          for contributor in data:
-
-                              author = contributor.get("author")
-
-                              if author and author.get("login", "").lower() == username.lower():
-
+                  resp = requests.get(stats_url, headers=headers)
+                  if resp.status_code == 200:
+                      stats_data = resp.json()
+                      if isinstance(stats_data, list):
+                          for contributor in stats_data:
+                              login_api = contributor.get("author", {}).get("login", "")
+                              if login_api.lower() == username.lower():
                                   for week in contributor.get("weeks", []):
                                       total_additions += week.get("a", 0)
                                       total_deletions += week.get("d", 0)
+                          print(f"  ✅ [{repo_name}]: Contribuições processadas.")
+                  elif resp.status_code == 202:
+                      print(f"  ⏳ [{repo_name}]: Cache frio no GitHub. Enviado para processamento paralelo...")
+                      pending_repos.append((repo_name, repo_owner, stats_url))
+                  elif resp.status_code == 204:
+                      print(f"  💤 [{repo_name}]: Repositório vazio (Sem conteúdo).")
+                  else:
+                      print(f"  -> Código {resp.status_code} ignorado para [{repo_name}]")
+              except Exception as e:
+                  print(f"  -> Erro de conexão em [{repo_name}]: {e}")
 
-              except Exception:
-                  pass
-
+              # Coleta volumétrica de linguagens do repositório
               try:
-                  langs = requests.get(
-                      f"https://api.github.com/repos/{owner}/{repo}/languages",
-                      headers=headers
-                  )
-
-                  if langs.status_code == 200:
-
-                      for lang, count in langs.json().items():
-                          languages_map[lang] = (
-                              languages_map.get(lang, 0) + count
-                          )
-
-              except Exception:
+                  lang_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/languages"
+                  lang_resp = requests.get(lang_url, headers=headers)
+                  if lang_resp.status_code == 200:
+                      lang_data = lang_resp.json()
+                      if isinstance(lang_data, dict):
+                          for lang, bytes_count in lang_data.items():
+                              languages_map[lang] = languages_map.get(lang, 0) + bytes_count
+              except:
                   pass
 
-          # ---------------------------------------------
-          # Linguagens
-          # ---------------------------------------------
+          # 4. PASSO 2: Coleta da fila pós-espera
+          if pending_repos:
+              wait_time = 25
+              print(f"\n🤖 {len(pending_repos)} repositórios na fila. Aguardando {wait_time}s para o GitHub atualizar os caches...")
+              time.sleep(wait_time)
+              
+              for repo_name, repo_owner, stats_url in pending_repos:
+                  try:
+                      resp = requests.get(stats_url, headers=headers)
+                      if resp.status_code == 200:
+                          stats_data = resp.json()
+                          if isinstance(stats_data, list):
+                              repo_add = 0
+                              repo_del = 0
+                              for contributor in stats_data:
+                                  login_api = contributor.get("author", {}).get("login", "")
+                                  if login_api.lower() == username.lower():
+                                      for week in contributor.get("weeks", []):
+                                          repo_add += week.get("a", 0)
+                                          repo_del += week.get("d", 0)
+                              total_additions += repo_add
+                              total_deletions += repo_del
+                              print(f"  ✅ [{repo_name}]: +{repo_add} | -{repo_del} linhas coletadas do seu usuário.")
+                      else:
+                          print(f"  ⚠️ [{repo_name}]: Ainda processando em segundo plano. Entrará na próxima janela de 12h.")
+                  except:
+                      pass
 
+          print(f"\n⚡ CÁLCULO SELETIVO FINALIZADO: Total Seu Adicionado: {total_additions} | Total Seu Removido: {total_deletions}")
+
+          # Processamento do ranking de linguagens dominantes
           total_bytes = sum(languages_map.values())
+          sorted_langs = sorted(languages_map.items(), key=lambda x: x[1], reverse=True)[:4]
+          lang_text = []
+          for lang, bytes_count in sorted_langs:
+              percentage = (bytes_count / total_bytes) * 100 if total_bytes > 0 else 0
+              lang_text.append(f"{lang} ({percentage:.1f}%)")
+          
+          languages_formatted = ", ".join(lang_text) if lang_text else "Identificando..."
 
-          sorted_langs = sorted(
-              languages_map.items(),
-              key=lambda x: x[1],
-              reverse=True
-          )[:4]
+          # Formatação visual das strings numéricas
+          str_additions = "{:,}".format(total_additions)
+          str_deletions = "{:,}".format(total_deletions)
+          verde_add = "$\\color{#2ea44f}{\\mathbf{+" + str_additions + "}}$"
+          vermelho_del = "$\\color{#f85149}{\\mathbf{-" + str_deletions + "}}$"
 
-          if total_bytes > 0:
-              languages_formatted = ", ".join(
-                  f"{lang} ({count / total_bytes * 100:.1f}%)"
-                  for lang, count in sorted_langs
-              )
-          else:
-              languages_formatted = "Identificando..."
+          # Template de renderização final
+          custom_text_raw = f"""### 📈 Minhas Estatísticas de Desenvolvimento
 
-          str_additions = f"{total_additions:,}"
-          str_deletions = f"{total_deletions:,}"
+          * 🚀 **Repositorios:** Já contribuí com um total de **{search_commits_count} commits**.
+          * 🔀 **Pulls:** Foram abertos **{total_prs} Pull Requests**.
+          * 📊 **Commits:** nos meus repositórios, movimentei um total de {verde_add} **linhas adicionadas** e {vermelho_del} **linhas removidas**.
+          * 💻 **linguagens utilizadas:** Participacao de linguagens utilizadas:**{languages_formatted}**.
 
-          # Markdown compatível com GitHub
-          stats_content = f"""
-### 📈 Minhas Estatísticas de Desenvolvimento
+          _Atualizado automaticamente via Python Script (metrics.yml)._
+          """
 
-* 🚀 **Repositórios:** Já contribuí com um total de **{search_commits_count} commits**.
-* 🔀 **Pull Requests:** Foram abertos **{total_prs} Pull Requests**.
-* 📊 **Linhas modificadas:** +{str_additions} adicionadas e -{str_deletions} removidas.
-* 💻 **Linguagens utilizadas:** **{languages_formatted}**.
-
-_Atualizado automaticamente via GitHub Actions._
-"""
-
-          # ---------------------------------------------
-          # Atualização do README
-          # ---------------------------------------------
+          custom_text = "\n".join([line.strip() for line in custom_text_raw.strip().split("\n")])
 
           with open(readme_file, "r", encoding="utf-8") as f:
               readme_content = f.read()
 
-          tag_start = "<!----start script---->"
-          tag_end = "<!----end script---->"
+          cleaned_content = re.sub(r".*?", "", readme_content, flags=re.DOTALL)
+          cleaned_content = cleaned_content.replace("", "").replace("", "")
 
-          pattern = re.compile(
-              re.escape(tag_start) + r".*?" + re.escape(tag_end),
-              re.DOTALL
-          )
+          updated_content = cleaned_content.rstrip() + "\n\n" + custom_text + "\n"
 
-          replacement = (
-              f"{tag_start}\n"
-              f"{stats_content}\n"
-              f"{tag_end}"
-          )
-
-          if pattern.search(readme_content):
-
-              updated_content = pattern.sub(
-                  replacement,
-                  readme_content
-              )
-
-              with open(readme_file, "w", encoding="utf-8") as f:
-                  f.write(updated_content)
-
-              print("README atualizado com sucesso!")
-
-          else:
-              print(
-                  f"Tags não encontradas:\n"
-                  f"{tag_start}\n"
-                  f"{tag_end}"
-              )
-              exit(1)
-
+          with open(readme_file, "w", encoding="utf-8") as f:
+              f.write(updated_content)
+          print("README.md atualizado com sucesso!")
           EOF
 
       - name: Commit and Push Changes
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-          git add README.md
-
-          if ! git diff --cached --quiet; then
-            git commit -m "docs: atualiza estatísticas globais [skip ci]"
-            git push
-          else
-            echo "Nenhuma alteração detectada."
-          fi
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add .
+          git diff --quiet && git diff --staged --quiet || git commit -m "docs: atualiza estatísticas globais de texto [skip ci]"
+          git push

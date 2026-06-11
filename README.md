@@ -1,7 +1,0 @@
-## 📊 Estatísticas
-
-<!----start script---->
-Carregando estatísticas...
-<!----end script---->
-
-## 🚀 Projetos
