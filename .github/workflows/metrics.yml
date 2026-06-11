@@ -96,11 +96,10 @@ jobs:
           custom_text = f"""<!-- START_STATS -->
           ### 📈 Minhas Estatísticas de Desenvolvimento
 
-          Atualmente, meu ecossistema de código conta com os seguintes números automatizados:
-          * 🚀 **Participação ativa:** Já contribuí com um total de **{total_commits} commits** em projetos no GitHub.
-          * 🔀 **Integrações:** Foram abertos **{total_prs} Pull Requests** para melhorias e correções de software.
-          * 📊 **Volume de código:** Nos repositórios ativos recentes, movimentei um total de **+{total_additions} linhas de código adicionadas** e **-{total_deletions} linhas removidas**.
-          * 💻 **Tecnologias dominantes:** Minha participação atual por volume de dados foca em **{languages_formatted}**.
+          * 🚀 **Commits:** Já contribuí com um total de **{total_commits} commits** em projetos no GitHub.
+          * 🔀 **Pulls:** Foram abertos **{total_prs} Pull Requests**.
+          * 📊 **Commits:** Nos repositórios recentes, movimentei um total de **+{total_additions} linhas de código adicionadas** e **-{total_deletions} linhas removidas**.
+          * 💻 **Linguagens utilizadas:** Minha participação por linguagem: **{languages_formatted}**.
 
           _Atualizado automaticamente via Python Script._
           <!-- END_STATS -->"""
