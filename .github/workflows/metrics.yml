@@ -84,7 +84,7 @@ jobs:
                   break
               page += 1
 
-          # Captura por commits recentes (repositórios de terceiros/faculdade)
+          # Captura por commits recentes
           try:
               recent_commits = requests.get(f"https://api.github.com/search/commits?q=author:{username}&per_page=100", headers=headers).json()
               if isinstance(recent_commits, dict) and "items" in recent_commits:
@@ -184,20 +184,16 @@ jobs:
           verde_add = "$\\color{#2ea44f}{\\mathbf{+" + str_additions + "}}$"
           vermelho_del = "$\\color{#f85149}{\\mathbf{-" + str_deletions + "}}$"
 
-          # Template de renderização utilizando estritamente as tags padrão ocultas
-          tag_start = ""
-          tag_end = ""
-
-          custom_text_raw = f"""{tag_start}
-          ### 📈 Minhas Estatísticas de Desenvolvimento 
+          # Template de renderização (Sempre injeta com a formatação padrão limpa)
+          custom_text_raw = f"""### 📈 Minhas Estatísticas de Desenvolvimento 
 
           * 🚀 **Repositorios:** Já contribuí com um total de **{search_commits_count} commits**.
           * 🔀 **Pulls:** Foram abertos **{total_prs} Pull Requests**.
           * 📊 **Commits:** nos meus repositórios, movimentei um total de {verde_add} **linhas adicionadas** e {vermelho_del} **linhas removidas**.
           * 💻 **linguagens utilizadas:** Participacao de linguagens utilizadas:**{languages_formatted}**.
 
-          _Atualizado automaticamente via Python Script (metrics.yml)._
-          {tag_end}"""
+          _Atualizado automaticamente via Python Script (Histórico Global)._
+          """
 
           custom_text = "\n".join([line.strip() for line in custom_text_raw.strip().split("\n")])
 
@@ -205,17 +201,22 @@ jobs:
           with open(readme_file, "r", encoding="utf-8") as f:
               readme_content = f.read()
 
-          # Substituição Cirúrgica Direta
-          if tag_start in readme_content and tag_end in readme_content:
-              updated_content = re.sub(r".*?", lambda m: custom_text, readme_content, flags=re.DOTALL)
-              print("Sucesso: Bloco modificado exatamente dentro das tags invisíveis padrão!")
+          # REGEX ULTRA-FLEXÍVEL: Encontra as tags mesmo com espaçamentos ou quebras de linha zoadas
+          # \s* garante tolerância a espaços extras antes/depois do nome da tag
+          pattern = r".*?"
+          
+          # Executa a substituição in-place e retorna quantas substituições fez (count)
+          updated_content, count = re.subn(pattern, lambda m: custom_text, readme_content, flags=re.DOTALL | re.IGNORECASE)
+
+          if count > 0:
+              print(f"Sucesso total: {count} bloco(s) antigo(s) detectado(s) e substituído(s) por apenas 1 novo!")
           else:
+              print("Aviso: Nenhuma tag foi detectada no arquivo. Criando o bloco inicial no fim do documento.")
               updated_content = readme_content.rstrip() + "\n\n" + custom_text + "\n"
-              print("Aviso: Tags padrão não detectadas. Criando novo bloco oculto no final do arquivo.")
 
           with open(readme_file, "w", encoding="utf-8") as f:
               f.write(updated_content)
-          print("README.md atualizado com sucesso!")
+          print("README.md reestruturado e salvo!")
           EOF
 
       - name: Commit and Push Changes
