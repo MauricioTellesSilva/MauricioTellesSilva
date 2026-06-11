@@ -184,8 +184,8 @@ jobs:
           # Formatação visual das strings numéricas
           str_additions = "{:,}".format(total_additions)
           str_deletions = "{:,}".format(total_deletions)
-          verde_add = "$\\color{#2ea44f}{\\mathbf{+" + str_additions + "}}$"
-          vermelho_del = "$\\color{#f85149}{\\mathbf{-" + str_deletions + "}}$"
+          verde_add = "$\\color{#2ea44f}{\\mathbf{++" + str_additions + "}}$"
+          vermelho_del = "$\\color{#f85149}{\\mathbf{--" + str_deletions + "}}$"
 
           # Template de renderização final
           custom_text_raw = f"""### 📈 Minhas Estatísticas de Desenvolvimento
