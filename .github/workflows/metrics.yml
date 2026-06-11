@@ -191,7 +191,7 @@ jobs:
           custom_text_raw = f"""### 📈 Minhas Estatísticas de Desenvolvimento
 
 
-          * 🚀 **Repositorios:** Já contribuí com um total de **{total_commits} commits**.
+          * 🚀 **Repositorios:** Já contribuí com um total de **{search_commits_count} commits**.
           * 🔀 **Pulls:** Foram abertos **{total_prs} Pull Requests**.
           * 📊 **Commits:** nos meus repositórios, movimentei um total de {verde_add} **linhas adicionadas** e {vermelho_del} **linhas removidas**.
           * 💻 **linguagens utilizadas:** Participacao de linguagens utilizadas:**{languages_formatted}**.
