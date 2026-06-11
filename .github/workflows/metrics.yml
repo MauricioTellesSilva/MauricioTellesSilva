@@ -67,11 +67,10 @@ jobs:
               print(f"Aviso ao buscar PRs: {e}")
 
           # 2. Mapeamento estendido de repositórios (Meus + Colaborações + Orgs)
-          unique_repos = set() # Guarda tuplas de (nome_do_repo, dono_do_repo)
+          unique_repos = set()
           
           page = 1
           while True:
-              # Puxa repositórios vinculados ao token (todas as afiliações)
               resp = requests.get(f"https://api.github.com/user/repos?per_page=100&page={page}", headers=headers)
               if resp.status_code != 200:
                   break
@@ -85,7 +84,7 @@ jobs:
                   break
               page += 1
 
-          # Captura extra: examinar commits recentes para achar repositórios externos participados
+          # Captura por commits recentes (repositórios de terceiros/faculdade)
           try:
               recent_commits = requests.get(f"https://api.github.com/search/commits?q=author:{username}&per_page=100", headers=headers).json()
               if isinstance(recent_commits, dict) and "items" in recent_commits:
@@ -101,9 +100,9 @@ jobs:
           languages_map = {}
           pending_repos = []
 
-          print(f"Varrendo um total de {len(unique_repos)} repositórios identificados (Dono/Membro/Colaborador)...\n")
+          print(f"Varrendo um total de {len(unique_repos)} repositórios identificados...\n")
 
-          # 3. PASSO 1: Chamada inicial aos Contribuidores (Exclusivo para suas linhas)
+          # 3. PASSO 1: Chamada inicial (Filtro exclusivo do seu usuário)
           for repo_name, repo_owner in unique_repos:
               stats_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/stats/contributors"
               
@@ -118,18 +117,16 @@ jobs:
                                   for week in contributor.get("weeks", []):
                                       total_additions += week.get("a", 0)
                                       total_deletions += week.get("d", 0)
-                          print(f"  ✅ [{repo_name}]: Contribuições processadas.")
+                          print(f"  ✅ [{repo_name}]: Contribuições computadas.")
                   elif resp.status_code == 202:
-                      print(f"  ⏳ [{repo_name}]: Cache frio no GitHub. Enviado para processamento paralelo...")
+                      print(f"  ⏳ [{repo_name}]: Adicionado à fila de processamento do GitHub...")
                       pending_repos.append((repo_name, repo_owner, stats_url))
                   elif resp.status_code == 204:
-                      print(f"  💤 [{repo_name}]: Repositório vazio (Sem conteúdo).")
-                  else:
-                      print(f"  -> Código {resp.status_code} ignorado para [{repo_name}]")
+                      print(f"  💤 [{repo_name}]: Repositório sem conteúdo relevante.")
               except Exception as e:
-                  print(f"  -> Erro de conexão em [{repo_name}]: {e}")
+                  print(f"  -> Erro em [{repo_name}]: {e}")
 
-              # Coleta volumétrica de linguagens do repositório
+              # Coleta de linguagens
               try:
                   lang_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/languages"
                   lang_resp = requests.get(lang_url, headers=headers)
@@ -141,10 +138,10 @@ jobs:
               except:
                   pass
 
-          # 4. PASSO 2: Coleta da fila pós-espera
+          # 4. PASSO 2: Coleta paralela da fila pós-espera rápida
           if pending_repos:
               wait_time = 25
-              print(f"\n🤖 {len(pending_repos)} repositórios na fila. Aguardando {wait_time}s para o GitHub atualizar os caches...")
+              print(f"\n🤖 {len(pending_repos)} repositórios na fila. Aguardando {wait_time}s de processamento no servidor...")
               time.sleep(wait_time)
               
               for repo_name, repo_owner, stats_url in pending_repos:
@@ -163,15 +160,15 @@ jobs:
                                           repo_del += week.get("d", 0)
                               total_additions += repo_add
                               total_deletions += repo_del
-                              print(f"  ✅ [{repo_name}]: +{repo_add} | -{repo_del} linhas coletadas do seu usuário.")
+                              print(f"  ✅ [{repo_name}]: +{repo_add} | -{repo_del} linhas obtidas.")
                       else:
-                          print(f"  ⚠️ [{repo_name}]: Ainda processando em segundo plano. Entrará na próxima janela de 12h.")
+                          print(f"  ⚠️ [{repo_name}]: Cache incompleto. Atualizará automaticamente na próxima janela.")
                   except:
                       pass
 
-          print(f"\n⚡ CÁLCULO SELETIVO FINALIZADO: Total Seu Adicionado: {total_additions} | Total Seu Removido: {total_deletions}")
+          print(f"\n⚡ CÁLCULO SELETIVO FINALIZADO: +{total_additions} | -{total_deletions}")
 
-          # Processamento do ranking de linguagens dominantes
+          # Processamento das linguagens dominantes
           total_bytes = sum(languages_map.values())
           sorted_langs = sorted(languages_map.items(), key=lambda x: x[1], reverse=True)[:4]
           lang_text = []
@@ -184,31 +181,33 @@ jobs:
           # Formatação visual das strings numéricas
           str_additions = "{:,}".format(total_additions)
           str_deletions = "{:,}".format(total_deletions)
-          verde_add = "$\\color{#2ea44f}{\\mathbf{++" + str_additions + "}}$"
-          vermelho_del = "$\\color{#f85149}{\\mathbf{--" + str_deletions + "}}$"
+          verde_add = "$\\color{#2ea44f}{\\mathbf{+" + str_additions + "}}$"
+          vermelho_del = "$\\color{#f85149}{\\mathbf{-" + str_deletions + "}}$"
 
-          # Template de renderização final
-          custom_text_raw = f"""### 📈 Minhas Estatísticas de Desenvolvimento
-
+          # Template de renderização utilizando as novas tags informadas
+          custom_text_raw = f"""<----script start---->
+          ### 📈 Minhas Estatísticas de Desenvolvimento
 
           * 🚀 **Repositorios:** Já contribuí com um total de **{search_commits_count} commits**.
           * 🔀 **Pulls:** Foram abertos **{total_prs} Pull Requests**.
           * 📊 **Commits:** nos meus repositórios, movimentei um total de {verde_add} **linhas adicionadas** e {vermelho_del} **linhas removidas**.
           * 💻 **linguagens utilizadas:** Participacao de linguagens utilizadas:**{languages_formatted}**.
-
-
           _Atualizado automaticamente via Python Script (metrics.yml)._
-          """
+          <----script end---->"""
 
           custom_text = "\n".join([line.strip() for line in custom_text_raw.strip().split("\n")])
 
+          # Leitura atual do arquivo
           with open(readme_file, "r", encoding="utf-8") as f:
               readme_content = f.read()
 
-          cleaned_content = re.sub(r".*?", "", readme_content, flags=re.DOTALL)
-          cleaned_content = cleaned_content.replace("", "").replace("", "")
-
-          updated_content = cleaned_content.rstrip() + "\n\n" + custom_text + "\n"
+          # Substituição Cirúrgica (In-Place) com suporte a caracteres especiais de tags customizadas
+          if "<----script start---->" in readme_content and "<----script end---->" in readme_content:
+              updated_content = re.sub(r"<----script start---->.*?<----script end---->", custom_text, readme_content, flags=re.DOTALL)
+              print("Sucesso: Bloco modificado exatamente onde as tags customizadas estavam localizadas!")
+          else:
+              updated_content = readme_content.rstrip() + "\n\n" + custom_text + "\n"
+              print("Aviso: Novas tags não encontradas no corpo do texto. Injetado no final do arquivo.")
 
           with open(readme_file, "w", encoding="utf-8") as f:
               f.write(updated_content)
