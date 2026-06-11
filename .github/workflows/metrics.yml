@@ -59,7 +59,6 @@ jobs:
 
           total_prs = "Disponível no painel"
           try:
-              print("Buscando Pull Requests...")
               pr_search = requests.get(f"https://api.github.com/search/issues?q=author:{username}+type:pr", headers=headers).json()
               if isinstance(pr_search, dict):
                   total_prs = pr_search.get("total_count", "Disponível no painel")
@@ -132,12 +131,13 @@ jobs:
           languages_formatted = ", ".join(lang_text) if lang_text else "Identificando..."
 
           # =========================================================================
-          # CORREÇÃO DO ERRO: Formatação isolada para evitar conflito de chaves {}
+          # tentativa 3: Concatenação limpa com .format() para evitar bugs
           # =========================================================================
-          verde_add = r"$\color{#2ea44f}{\mathbf{+" + f"{total_additions:,}" + r"}}$"
-          vermelho_del = r"$\color{#f85149}{\mathbf{-" + f"{total_deletions:,}" + r"}}$
-          # =========================================================================
+          str_additions = "{:,}".format(total_additions)
+          str_deletions = "{:,}".format(total_deletions)
 
+          verde_add = "$\\color{#2ea44f}{\\mathbf{+" + str_additions + "}}$"
+          vermelho_del = "$\\color{#f85149}{\\mathbf{-" + str_deletions + "}}$"
           # Template do texto final limpo
           custom_text = f"""### 📈 Minhas Estatísticas de Desenvolvimento 
 
