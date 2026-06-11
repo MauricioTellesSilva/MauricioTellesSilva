@@ -98,7 +98,7 @@ jobs:
 
           * 🚀 **Commits:** Já contribuí com um total de **{total_commits} commits** em projetos no GitHub.
           * 🔀 **Pulls:** Foram abertos **{total_prs} Pull Requests**.
-          * 📊 **Commits:** Nos repositórios recentes, movimentei um total de **+{total_additions} linhas de código adicionadas** e **-{total_deletions} linhas removidas**.
+          * 📊 **Commits**  Nos repositórios recentes, movimentei um total de $\color{{#2ea44f}}{{\mathbf{{+{total_additions}}}}}}$ **linhas adicionadas** e $\color{{#f85149}}{{\mathbf{{-{total_deletions}}}}}}$ **linhas removidas**.
           * 💻 **Linguagens utilizadas:** Minha participação por linguagem: **{languages_formatted}**.
 
           _Atualizado automaticamente via Python Script._
