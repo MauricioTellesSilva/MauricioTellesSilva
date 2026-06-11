@@ -184,16 +184,18 @@ jobs:
           verde_add = "$\\color{#2ea44f}{\\mathbf{+" + str_additions + "}}$"
           vermelho_del = "$\\color{#f85149}{\\mathbf{-" + str_deletions + "}}$"
 
-          # Template de renderização utilizando as novas tags informadas
-          custom_text_raw = f"""<----script start---->
-          ### 📈 Minhas Estatísticas de Desenvolvimento
+          # Template de renderização utilizando as novas tags INVISÍVEIS
+          tag_start = "-->"
+          tag_end = "-->"
 
+          custom_text_raw = f"""{tag_start}
           * 🚀 **Repositorios:** Já contribuí com um total de **{search_commits_count} commits**.
           * 🔀 **Pulls:** Foram abertos **{total_prs} Pull Requests**.
           * 📊 **Commits:** nos meus repositórios, movimentei um total de {verde_add} **linhas adicionadas** e {vermelho_del} **linhas removidas**.
           * 💻 **linguagens utilizadas:** Participacao de linguagens utilizadas:**{languages_formatted}**.
+
           _Atualizado automaticamente via Python Script (metrics.yml)._
-          <----script end---->"""
+          {tag_end}"""
 
           custom_text = "\n".join([line.strip() for line in custom_text_raw.strip().split("\n")])
 
@@ -201,13 +203,16 @@ jobs:
           with open(readme_file, "r", encoding="utf-8") as f:
               readme_content = f.read()
 
-          # Substituição Cirúrgica (In-Place) com suporte a caracteres especiais de tags customizadas
-          if "<----script start---->" in readme_content and "<----script end---->" in readme_content:
-              updated_content = re.sub(r"<----script start---->.*?<----script end---->", custom_text, readme_content, flags=re.DOTALL)
-              print("Sucesso: Bloco modificado exatamente onde as tags customizadas estavam localizadas!")
+          # Substituição Cirúrgica (In-Place) detectando os comentários ocultos
+          if tag_start in readme_content and tag_end in readme_content:
+              updated_content = re.sub(r"-->.*?-->", custom_text, readme_content, flags=re.DOTALL)
+              print("Sucesso: Bloco modificado exatamente dentro das tags invisíveis!")
           else:
+              # Caso o usuário ainda esteja com as tags antigas visíveis, tenta limpar elas também
+              if "<----script start---->" in readme_content:
+                  readme_content = readme_content.replace("<----script start---->", "").replace("<----script end---->", "")
               updated_content = readme_content.rstrip() + "\n\n" + custom_text + "\n"
-              print("Aviso: Novas tags não encontradas no corpo do texto. Injetado no final do arquivo.")
+              print("Aviso: Tags invisíveis não detectadas. Criando novo bloco oculto no final do arquivo.")
 
           with open(readme_file, "w", encoding="utf-8") as f:
               f.write(updated_content)
