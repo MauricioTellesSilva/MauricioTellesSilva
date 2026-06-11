@@ -184,17 +184,20 @@ jobs:
           verde_add = "$\\color{#2ea44f}{\\mathbf{+" + str_additions + "}}$"
           vermelho_del = "$\\color{#f85149}{\\mathbf{-" + str_deletions + "}}$"
 
-          # Template de renderização utilizando as novas tags INVISÍVEIS
-          tag_start = "-->"
-          tag_end = "-->"
+          # Template de renderização utilizando as tags padrão ocultas
+          tag_start = ""
+          tag_end = ""
 
           custom_text_raw = f"""{tag_start}
-          * 🚀 **Repositorios:** Já contribuí com um total de **{search_commits_count} commits**.
-          * 🔀 **Pulls:** Foram abertos **{total_prs} Pull Requests**.
-          * 📊 **Commits:** nos meus repositórios, movimentei um total de {verde_add} **linhas adicionadas** e {vermelho_del} **linhas removidas**.
-          * 💻 **linguagens utilizadas:** Participacao de linguagens utilizadas:**{languages_formatted}**.
+          ### 📈 Minhas Estatísticas de Desenvolvimento (Histórico Completo)
 
-          _Atualizado automaticamente via Python Script (metrics.yml)._
+          Desde a criação da minha conta, meu ecossistema de código conta com os seguintes números acumulados:
+          * 🚀 **Participação ativa:** Já contribuí com um total de **{search_commits_count} commits** em projetos no GitHub.
+          * 🔀 **Integrações:** Foram abertos **{total_prs} Pull Requests** para melhorias e correções de software.
+          * 📊 **Volume de código:** Em toda a história dos meus repositórios, movimentei um total de {verde_add} **linhas adicionadas** e {vermelho_del} **linhas removidas**.
+          * 💻 **Tecnologias dominantes:** Minha participação histórica por volume de dados foca em **{languages_formatted}**.
+
+          _Atualizado automaticamente via Python Script (Histórico Global)._
           {tag_end}"""
 
           custom_text = "\n".join([line.strip() for line in custom_text_raw.strip().split("\n")])
@@ -203,16 +206,18 @@ jobs:
           with open(readme_file, "r", encoding="utf-8") as f:
               readme_content = f.read()
 
-          # Substituição Cirúrgica (In-Place) detectando os comentários ocultos
+          # Substituição Cirúrgica (In-Place) detectando os comentários ocultos originais
           if tag_start in readme_content and tag_end in readme_content:
-              updated_content = re.sub(r"-->.*?-->", custom_text, readme_content, flags=re.DOTALL)
-              print("Sucesso: Bloco modificado exatamente dentro das tags invisíveis!")
+              updated_content = re.sub(r".*?", custom_text, readme_content, flags=re.DOTALL)
+              print("Sucesso: Bloco modificado exatamente dentro das tags invisíveis padrão!")
           else:
-              # Caso o usuário ainda esteja com as tags antigas visíveis, tenta limpar elas também
+              # Limpeza preventiva caso as tags customizadas da tentativa anterior ainda estejam lá
               if "<----script start---->" in readme_content:
+                  readme_content = re.sub(r"-->.*?-->", "", readme_content, flags=re.DOTALL)
                   readme_content = readme_content.replace("<----script start---->", "").replace("<----script end---->", "")
+              
               updated_content = readme_content.rstrip() + "\n\n" + custom_text + "\n"
-              print("Aviso: Tags invisíveis não detectadas. Criando novo bloco oculto no final do arquivo.")
+              print("Aviso: Tags padrão não detectadas. Criando novo bloco oculto no final do arquivo.")
 
           with open(readme_file, "w", encoding="utf-8") as f:
               f.write(updated_content)
