@@ -133,7 +133,7 @@ jobs:
                   for contributor in stats_data:
                       if isinstance(contributor, dict):
                           login_api = contributor.get("author", {}).get("login", "")
-                          # correcao: Comparação em lowercase evita ignorar seus dados por conflito de maiúsculas
+                          # 🛡️ FIX CRÍTICO: Comparação em lowercase evita ignorar seus dados por conflito de maiúsculas
                           if login_api.lower() == username.lower():
                               for week in contributor.get("weeks", []):
                                   total_additions += week.get("a", 0)
@@ -174,21 +174,21 @@ jobs:
           vermelho_del = "$\\color{#f85149}{\\mathbf{-" + str_deletions + "}}$"
 
           # Template bruto estruturado
-           custom_text = f"""### 📈 Minhas Estatísticas de Desenvolvimento
+          custom_text_raw = f"""### 📈 Minhas Estatísticas de Desenvolvimento (Histórico Completo)
 
+          Desde a criação da minha conta, meu ecossistema de código conta com os seguintes números acumulados:
+          * 🚀 **Participação ativa:** Já contribuí com um total de **{final_commits} commits** em projetos no GitHub.
+          * 🔀 **Integrações:** Foram abertos **{total_prs} Pull Requests** para melhorias e correções de software.
+          * 📊 **Volume de código:** Em toda a história dos meus repositórios, movimentei um total de {verde_add} **linhas adicionadas** e {vermelho_del} **linhas removidas**.
+          * 💻 **Tecnologias dominantes:** Minha participação histórica por volume de dados foca em **{languages_formatted}**.
 
-          * 🚀 **Repositorios:** Já contribuí com um total de **{total_commits} commits**.
-          * 🔀 **Pulls:** Foram abertos **{total_prs} Pull Requests**.
-          * 📊 **Commits:** nos meus repositórios, movimentei um total de {verde_add} **linhas adicionadas** e {vermelho_del} **linhas removidas**.
-          * 💻 **linguagens utilizadas:** Participacao de linguagens utilizadas:**{languages_formatted}**.
-
-
-          _Atualizado automaticamente via Python Script (metrics.yml)._
+          _Atualizado automaticamente via Python Script (Histórico Global)._
           """
+
           # Formata limpando indentações indesejadas geradas pelo heredoc do terminal
           custom_text = "\n".join([line.strip() for line in custom_text_raw.strip().split("\n")])
 
-          # Anti copia
+          # 🧼 MECANISMO ANTI-DUPLICIDADE TOTAL (Baseado em fatiamento de strings pura)
           with open(readme_file, "r", encoding="utf-8") as f:
               readme_content = f.read()
 
