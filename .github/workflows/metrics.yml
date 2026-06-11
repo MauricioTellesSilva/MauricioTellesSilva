@@ -1,41 +1,126 @@
-name: Metrics
+name: Update Profile README Text Stats
 on:
-  # Agenda a atualização a cada 6 horas
-  schedule: [{cron: "0 */6 * * *"}]
-  # Permite que você force a atualização manualmente pela aba Actions
-  workflow_dispatch:
-  push: {branches: ["master", "main"]}
+  schedule:
+    - cron: "0 */12 * * *" # Atualiza a cada 12 horas
+  workflow_dispatch: # Permite rodar manualmente
+  push:
+    branches: ["main", "master"]
+
 jobs:
-  github-metrics:
+  update-readme:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: lowlighter/metrics@latest
-        with:
-          # Token de segurança que você vai configurar (passo abaixo)
-          token: ${{ secrets.METRICS_TOKEN }}
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-          # Configurações de saída
-          filename: github-metrics.svg
-          base: header, activity, community, repositories, metadata
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: pip install requests
+
+      - name: Generate Custom Text
+        env:
+          GH_TOKEN: ${{ secrets.METRICS_TOKEN }}
+          GH_USERNAME: ${{ github.repository_owner }}
+        run: |
+          python - << 'EOF'
+          import os
+          import requests
+          import re
+
+          token = os.getenv("GH_TOKEN")
+          username = os.getenv("GH_USERNAME")
+          headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
+
+          # 1. Buscar total de Commits e Pull Requests globais via Search API
+          try:
+              commit_search = requests.get(f"https://api.github.com/search/commits?q=author:{username}", headers=headers).json()
+              total_commits = commit_search.get("total_count", 0)
+          except:
+              total_commits = "Disponível no painel"
+
+          try:
+              pr_search = requests.get(f"https://api.github.com/search/issues?q=author:{username}+type:pr", headers=headers).json()
+              total_prs = pr_search.get("total_count", 0)
+          except:
+              total_prs = "Disponível no painel"
+
+          # 2. Buscar linhas adicionadas/removidas e linguagens dos repositórios mais recentes
+          repos_url = f"https://api.github.com/users/{username}/repos?per_page=20&sort=pushed"
+          repos = requests.get(repos_url, headers=headers).json()
+
+          total_additions = 0
+          total_deletions = 0
+          languages_map = {}
+
+          if isinstance(repos, list):
+              for repo in repos:
+                  if repo.get("fork"): continue
+                  repo_name = repo.get("name")
+                  
+                  # Contagem de linhas por commit recente
+                  stats_url = f"https://api.github.com/repos/{username}/{repo_name}/stats/contributors"
+                  stats_resp = requests.get(stats_url, headers=headers)
+                  if stats_resp.status_code == 200 and stats_resp.json():
+                      for contributor in stats_resp.json():
+                          if contributor.get("author", {}).get("login") == username:
+                              for week in contributor.get("weeks", []):
+                                  total_additions += week.get("a", 0)
+                                  total_deletions += week.get("d", 0)
+                  
+                  # Contagem de linguagens
+                  lang_url = f"https://api.github.com/repos/{username}/{repo_name}/languages"
+                  lang_resp = requests.get(lang_url, headers=headers)
+                  if lang_resp.status_code == 200:
+                      for lang, bytes_count in lang_resp.json().items():
+                          languages_map[lang] = languages_map.get(lang, 0) + bytes_count
+
+          # Calcular porcentagem das linguagens
+          total_bytes = sum(languages_map.values())
+          sorted_langs = sorted(languages_map.items(), key=lambda x: x[1], reverse=True)[:4]
+          lang_text = []
+          for lang, bytes_count in sorted_langs:
+              percentage = (bytes_count / total_bytes) * 100 if total_bytes > 0 else 0
+              lang_text.append(f"{lang} ({percentage:.1f}%)")
           
-          # PLUGIN: Linhas de código (Adicionadas e Removidas)
-          plugin_lines: yes
-          plugin_lines_sections: base, history
-          
-          # PLUGIN: Detalhes de linguagens e participação
-          plugin_languages: yes
-          plugin_languages_analysis_timeout: 15
-          plugin_languages_categories: markup, programming
-          plugin_languages_colors: github
-          plugin_languages_limit: 8
-          plugin_languages_recent_categories: markup, programming
-          plugin_languages_recent_days: 14
-          plugin_languages_recent_load: 300
-          plugin_languages_sections: most-used
-          plugin_languages_threshold: 0%
-          
-          # Configurações visuais adicionais
-          config_timezone: America/Sao_Paulo
-          theme: tokyonight
+          languages_formatted = ", ".join(lang_text) if lang_text else "Identificando..."
+
+          # =========================================================================
+          # ✍️ PERSONALIZE SEU TEXTO AQUI EMBAIXO
+          # =========================================================================
+          custom_text = f"""<!-- START_STATS -->
+          ### 📈 Minhas Estatísticas de Desenvolvimento
+
+          Atualmente, meu ecossistema de código conta com os seguintes números automatizados:
+          * 🚀 **Participação ativa:** Já contribuí com um total de **{total_commits} commits** em projetos no GitHub.
+          * 🔀 **Integrações:** Foram abertos **{total_prs} Pull Requests** para melhorias e correções de software.
+          * 📊 **Volume de código:** Nos repositórios ativos recentes, movimentei um total de **+{total_additions} linhas de código adicionadas** e **-{total_deletions} linhas removidas**.
+          * 💻 **Tecnologias dominantes:** Minha participação atual por volume de dados foca em **{languages_formatted}**.
+
+          _Atualizado automaticamente via Python Script._
+          <!-- END_STATS -->"""
+          # =========================================================================
+
+          # Injetar o texto gerado no README
+          with open("README.md", "r", encoding="utf-8") as f:
+              readme_content = f.read()
+
+          pattern = r"<!-- START_STATS -->.*?<!-- END_STATS -->"
+          updated_content = re.sub(pattern, custom_text, readme_content, flags=re.DOTALL)
+
+          with open("README.md", "w", encoding="utf-8") as f:
+              f.write(updated_content)
+          EOF
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add README.md
+          git diff --quiet && git diff --staged --quiet || git commit -m "docs: atualiza estatísticas de texto no perfil [skip ci]"
+          git push
