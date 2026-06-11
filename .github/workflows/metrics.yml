@@ -184,19 +184,20 @@ jobs:
           # Formatação visual das strings numéricas
           str_additions = "{:,}".format(total_additions)
           str_deletions = "{:,}".format(total_deletions)
-          verde_add = "$\\color{#2ea44f}{\\mathbf{+" + str_additions + "}}$"
-          vermelho_del = "$\\color{#f85149}{\\mathbf{-" + str_deletions + "}}$"
+          verde_add = "$\\color{#2ea44f}{\\mathbf{++" + str_additions + "}}$"
+          vermelho_del = "$\\color{#f85149}{\\mathbf{--" + str_deletions + "}}$"
 
           # Template de renderização final
-          custom_text_raw = f"""### 📈 Minhas Estatísticas de Desenvolvimento (Histórico Completo)
+          custom_text_raw = f"""### 📈 Minhas Estatísticas de Desenvolvimento
 
-          Desde a criação da minha conta, meu ecossistema de código conta com os seguintes números acumulados:
-          * 🚀 **Participação ativa:** Já contribuí com um total de **{search_commits_count} commits** em projetos no GitHub.
-          * 🔀 **Integrações:** Foram abertos **{total_prs} Pull Requests** para melhorias e correções de software.
-          * 📊 **Volume de código:** Em toda a história dos meus repositórios, movimentei um total de {verde_add} **linhas adicionadas** e {vermelho_del} **linhas removidas**.
-          * 💻 **Tecnologias dominantes:** Minha participação histórica por volume de dados foca em **{languages_formatted}**.
 
-          _Atualizado automaticamente via Python Script (Histórico Global)._
+          * 🚀 **Repositorios:** Já contribuí com um total de **{total_commits} commits**.
+          * 🔀 **Pulls:** Foram abertos **{total_prs} Pull Requests**.
+          * 📊 **Commits:** nos meus repositórios, movimentei um total de {verde_add} **linhas adicionadas** e {vermelho_del} **linhas removidas**.
+          * 💻 **linguagens utilizadas:** Participacao de linguagens utilizadas:**{languages_formatted}**.
+
+
+          _Atualizado automaticamente via Python Script (metrics.yml)._
           """
 
           custom_text = "\n".join([line.strip() for line in custom_text_raw.strip().split("\n")])
