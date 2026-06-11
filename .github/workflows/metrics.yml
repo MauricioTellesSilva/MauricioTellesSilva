@@ -1,7 +1,7 @@
 name: Update Profile README Text Stats
 on:
   schedule:
-    - cron: "0 */12 * * *" # Atualiza a cada 12 horas
+    - cron: "0 */6 * * *" # Atualiza a cada 6 horas
   workflow_dispatch: # Permite rodar manualmente
   push:
     branches: ["main", "master"]
@@ -130,21 +130,23 @@ jobs:
           
           languages_formatted = ", ".join(lang_text) if lang_text else "Identificando..."
 
-          # =========================================================================
-          # tentativa 3: Concatenação limpa com .format() para evitar bugs
-          # =========================================================================
+          # Strings numéricas formatadas
           str_additions = "{:,}".format(total_additions)
           str_deletions = "{:,}".format(total_deletions)
 
+          # Blocos LaTeX limpos
           verde_add = "$\\color{#2ea44f}{\\mathbf{+" + str_additions + "}}$"
           vermelho_del = "$\\color{#f85149}{\\mathbf{-" + str_deletions + "}}$"
-          # Template do texto final limpo
-          custom_text = f"""### 📈 Minhas Estatísticas de Desenvolvimento 
+
+          # Template do texto final
+          custom_text = f"""### 📈 Minhas Estatísticas de Desenvolvimento
+
 
           * 🚀 **Repositorios:** Já contribuí com um total de **{total_commits} commits**.
           * 🔀 **Pulls:** Foram abertos **{total_prs} Pull Requests**.
           * 📊 **Commits:** nos meus repositórios, movimentei um total de {verde_add} **linhas adicionadas** e {vermelho_del} **linhas removidas**.
           * 💻 **linguagens utilizadas:** Participacao de linguagens utilizadas:**{languages_formatted}**.
+
 
           _Atualizado automaticamente via Python Script (metrics.yml)._
           """
@@ -154,7 +156,9 @@ jobs:
               readme_content = f.read()
 
           pattern = r".*?"
-          updated_content = re.sub(pattern, custom_text, readme_content, flags=re.DOTALL)
+          
+          # 💡 O PULO DO GATO: Usar lambda m: custom_text impede o re.sub de processar os \c e \b do LaTeX
+          updated_content = re.sub(pattern, lambda m: custom_text, readme_content, flags=re.DOTALL)
 
           with open(readme_file, "w", encoding="utf-8") as f:
               f.write(updated_content)
