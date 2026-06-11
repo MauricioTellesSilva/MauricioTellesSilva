@@ -87,52 +87,51 @@ jobs:
 
           print(f"Varrendo um total de {len(repos)} repositórios encontrados...\n")
 
-          # 3. Análise profunda de cada repositório com insistência adaptativa no Cache
+          # 3. Análise de linhas via Code Frequency com Backoff Progressivo
           for repo in repos:
               if repo.get("fork"): 
                   continue
               repo_name = repo.get("name")
               repo_owner = repo.get("owner", {}).get("login", username)
               
-              stats_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/stats/contributors"
-              stats_data = None
+              cf_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/stats/code_frequency"
+              cf_data = None
               
-              # Loop persistente: aguarda até 30 segundos (6 tentativas x 5s) para o GitHub calcular as linhas
-              for retry in range(6):
+              # Delays progressivos para dar tempo ao cluster do GitHub (3s, 6s, 12s, 15s, 20s)
+              delays = [3, 6, 12, 15, 20]
+              for retry in range(5):
                   try:
-                      stats_resp = requests.get(stats_url, headers=headers)
-                      if stats_resp.status_code == 200:
-                          stats_data = stats_resp.json()
+                      cf_resp = requests.get(cf_url, headers=headers)
+                      if cf_resp.status_code == 200:
+                          cf_data = cf_resp.json()
                           break
-                      elif stats_resp.status_code == 202:
-                          print(f"  -> GitHub calculando dados de [{repo_name}]. Aguardando 5s... (Tentativa {retry+1}/6)")
-                          time.sleep(5)
+                      elif cf_resp.status_code == 202:
+                          wait_time = delays[retry]
+                          print(f"  -> GitHub compilando linhas de [{repo_name}]. Aguardando {wait_time}s... (Tentativa {retry+1}/5)")
+                          time.sleep(wait_time)
                       else:
-                          print(f"  -> Erro {stats_resp.status_code} ao acessar {repo_name}")
+                          print(f"  -> Erro {cf_resp.status_code} ao acessar [{repo_name}]")
                           break
                   except Exception as e:
-                      print(f"  -> Erro de conexão no repositório {repo_name}: {e}")
+                      print(f"  -> Erro de conexão em [{repo_name}]: {e}")
                       break
 
-              # Processamento numérico focado estritamente no SEU usuário
+              # Processamento do volume de linhas retornados
               repo_add = 0
               repo_del = 0
-              if isinstance(stats_data, list):
-                  for contributor in stats_data:
-                      if isinstance(contributor, dict):
-                          login_api = contributor.get("author", {}).get("login", "")
-                          if login_api.lower() == username.lower():
-                              for week in contributor.get("weeks", []):
-                                  repo_add += week.get("a", 0)
-                                  repo_del += week.get("d", 0)
+              if isinstance(cf_data, list):
+                  for week in cf_data:
+                      if len(week) >= 3:
+                          repo_add += week[1]
+                          repo_del += abs(week[2]) # Transforma o valor negativo da API em absoluto
                   
-                  print(f"  ✅ [{repo_name}]: +{repo_add} | -{repo_del} linhas contabilizadas.")
+                  print(f"  ✅ [{repo_name}]: +{repo_add} | -{repo_del} linhas obtidas com sucesso.")
                   total_additions += repo_add
                   total_deletions += repo_del
               else:
-                  print(f"  ⚠️ Não foi possível obter dados estáveis para [{repo_name}] (Cache vazio ou timeout).")
+                  print(f"  ⚠️ Não foi possível obter dados estáveis para [{repo_name}] após tentativas.")
               
-              # Coleta volumétrica das linguagens de programação
+              # Coleta de linguagens de programação
               try:
                   lang_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/languages"
                   lang_resp = requests.get(lang_url, headers=headers)
@@ -156,17 +155,17 @@ jobs:
           
           languages_formatted = ", ".join(lang_text) if lang_text else "Identificando..."
 
-          # Montagem segura das strings com formatação visual de milhares
+          # Formatação das strings numéricas com separadores de milhares
           str_additions = "{:,}".format(total_additions)
           str_deletions = "{:,}".format(total_deletions)
           verde_add = "$\\color{#2ea44f}{\\mathbf{+" + str_additions + "}}$"
           vermelho_del = "$\\color{#f85149}{\\mathbf{-" + str_deletions + "}}$"
 
-          # Template de texto limpo
+          # Template de renderização final
           custom_text_raw = f"""### 📈 Minhas Estatísticas de Desenvolvimento (Histórico Completo)
 
           Desde a criação da minha conta, meu ecossistema de código conta com os seguintes números acumulados:
-          * 🚀 **Participação activa:** Já contribuí com um total de **{search_commits_count} commits** em projetos no GitHub.
+          * 🚀 **Participação ativa:** Já contribuí com um total de **{search_commits_count} commits** em projetos no GitHub.
           * 🔀 **Integrações:** Foram abertos **{total_prs} Pull Requests** para melhorias e correções de software.
           * 📊 **Volume de código:** Em toda a história dos meus repositórios, movimentei um total de {verde_add} **linhas adicionadas** e {vermelho_del} **linhas removidas**.
           * 💻 **Tecnologias dominantes:** Minha participação histórica por volume de dados foca em **{languages_formatted}**.
@@ -176,14 +175,13 @@ jobs:
 
           custom_text = "\n".join([line.strip() for line in custom_text_raw.strip().split("\n")])
 
-          # Leitura e higienização robusta do README contra duplicados
+          # Limpeza de blocos antigos e gravação segura
           with open(readme_file, "r", encoding="utf-8") as f:
               readme_content = f.read()
 
           cleaned_content = re.sub(r".*?", "", readme_content, flags=re.DOTALL)
           cleaned_content = cleaned_content.replace("", "").replace("", "")
 
-          # Injeta o bloco novo
           updated_content = cleaned_content.rstrip() + "\n\n" + custom_text + "\n"
 
           with open(readme_file, "w", encoding="utf-8") as f:
