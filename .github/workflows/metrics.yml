@@ -1,7 +1,7 @@
 name: Update Profile README Text Stats
 on:
   schedule:
-    - cron: "0 */12 * * *" # Atualiza a cada 12 horas
+    - cron: "0 */12 * * *" # Atualiza a cada 12 hours
   workflow_dispatch: # Permite rodar manualmente
   push:
     branches: ["main", "master"]
@@ -31,6 +31,7 @@ jobs:
           python - << 'EOF'
           import os
           import requests
+          import re
           import time
 
           token = os.getenv("GH_TOKEN")
@@ -65,12 +66,10 @@ jobs:
           except Exception as e:
               print(f"Aviso ao buscar PRs: {e}")
 
-          # 2. Paginação abrangente de repositórios (Públicos, Privados, Colaborações e Organizações)
+          # 2. Paginação abrangente de repositórios (Públicos e Privados)
           repos = []
           page = 1
-          
-          # Tenta usar a rota autenticada do usuário ativo para maior abrangência
-          resp = requests.get(f"https://api.github.com/user/repos?per_page=100&affiliation=owner,collaborator,organization_member&page={page}", headers=headers)
+          resp = requests.get(f"https://api.github.com/user/repos?per_page=100&affiliation=owner&page={page}", headers=headers)
           if resp.status_code == 200:
               while True:
                   data = resp.json()
@@ -80,9 +79,9 @@ jobs:
                   if len(data) < 100:
                       break
                   page += 1
-                  resp = requests.get(f"https://api.github.com/user/repos?per_page=100&affiliation=owner,collaborator,organization_member&page={page}", headers=headers)
+                  resp = requests.get(f"https://api.github.com/user/repos?per_page=100&affiliation=owner&page={page}", headers=headers)
           else:
-              print("Aviso: Rota privada indisponível. Usando fallback de repositórios públicos...")
+              print("Aviso: Rota privada inacessível. Usando fallback público...")
               while True:
                   resp = requests.get(f"https://api.github.com/users/{username}/repos?per_page=100&page={page}", headers=headers)
                   if resp.status_code != 200:
@@ -97,50 +96,40 @@ jobs:
 
           total_additions = 0
           total_deletions = 0
-          total_commits_from_stats = 0
           languages_map = {}
 
           print(f"Varrendo um total de {len(repos)} repositórios encontrados...")
 
-          # 3. Análise profunda de cada repositório com correção de maiúsculas/minúsculas (.lower())
+          # 3. Análise de linhas via Code Frequency (Muito mais estável e rápido)
           for repo in repos:
               if repo.get("fork"): 
                   continue
               repo_name = repo.get("name")
               repo_owner = repo.get("owner", {}).get("login", username)
               
-              # Loop adaptativo de repetição para aguardar o cache de estatísticas (Resposta 202 do GitHub)
-              stats_data = None
-              stats_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/stats/contributors"
+              cf_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/stats/code_frequency"
+              cf_data = None
               
-              for retry in range(5): # Até 5 tentativas com maior tempo de folga
+              for retry in range(3):
                   try:
-                      stats_resp = requests.get(stats_url, headers=headers)
-                      if stats_resp.status_code == 200:
-                          stats_data = stats_resp.json()
+                      cf_resp = requests.get(cf_url, headers=headers)
+                      if cf_resp.status_code == 200:
+                          cf_data = cf_resp.json()
                           break
-                      elif stats_resp.status_code == 202:
-                          print(f"-> GitHub compilando dados de [{repo_name}]. Aguardando 3s... (Tentativa {retry+1}/5)")
-                          time.sleep(3)
+                      elif cf_resp.status_code == 202:
+                          time.sleep(2)
                       else:
                           break
-                  except Exception as e:
-                      print(f"Erro de conexão no repositório {repo_name}: {e}")
+                  except:
                       break
 
-              # Processamento dos dados numéricos coletados
-              if isinstance(stats_data, list):
-                  for contributor in stats_data:
-                      if isinstance(contributor, dict):
-                          login_api = contributor.get("author", {}).get("login", "")
-                          # 🛡️ FIX CRÍTICO: Comparação em lowercase evita ignorar seus dados por conflito de maiúsculas
-                          if login_api.lower() == username.lower():
-                              for week in contributor.get("weeks", []):
-                                  total_additions += week.get("a", 0)
-                                  total_deletions += week.get("d", 0)
-                                  total_commits_from_stats += week.get("c", 0)
-              
-              # Coleta volumétrica das linguagens de programação
+              if isinstance(cf_data, list):
+                  for week in cf_data:
+                      if len(week) >= 3:
+                          total_additions += week[1]
+                          total_deletions += abs(week[2]) # Deletions vêm como negativo da API
+
+              # Coleta de linguagens
               try:
                   lang_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/languages"
                   lang_resp = requests.get(lang_url, headers=headers)
@@ -149,13 +138,8 @@ jobs:
                       if isinstance(lang_data, dict):
                           for lang, bytes_count in lang_data.items():
                               languages_map[lang] = languages_map.get(lang, 0) + bytes_count
-              except Exception as e:
-                  print(f"Erro ao processar linguagens do repo {repo_name}: {e}")
-
-          # Define o teto máximo de commits detectados para consistência
-          final_commits = max(search_commits_count, total_commits_from_stats)
-          if final_commits == 0 and search_commits_count == 0:
-              final_commits = "Disponível no painel"
+              except:
+                  pass
 
           # Processamento do ranking de linguagens dominantes
           total_bytes = sum(languages_map.values())
@@ -167,17 +151,17 @@ jobs:
           
           languages_formatted = ", ".join(lang_text) if lang_text else "Identificando..."
 
-          # Montagem segura das strings de linhas com LaTeX
+          # Formatação das strings numéricas
           str_additions = "{:,}".format(total_additions)
           str_deletions = "{:,}".format(total_deletions)
           verde_add = "$\\color{#2ea44f}{\\mathbf{+" + str_additions + "}}$"
           vermelho_del = "$\\color{#f85149}{\\mathbf{-" + str_deletions + "}}$"
 
-          # Template bruto estruturado
+          # Novo Bloco Formatado
           custom_text_raw = f"""### 📈 Minhas Estatísticas de Desenvolvimento (Histórico Completo)
 
           Desde a criação da minha conta, meu ecossistema de código conta com os seguintes números acumulados:
-          * 🚀 **Participação ativa:** Já contribuí com um total de **{final_commits} commits** em projetos no GitHub.
+          * 🚀 **Participação ativa:** Já contribuí com um total de **{search_commits_count} commits** em projetos no GitHub.
           * 🔀 **Integrações:** Foram abertos **{total_prs} Pull Requests** para melhorias e correções de software.
           * 📊 **Volume de código:** Em toda a história dos meus repositórios, movimentei um total de {verde_add} **linhas adicionadas** e {vermelho_del} **linhas removidas**.
           * 💻 **Tecnologias dominantes:** Minha participação histórica por volume de dados foca em **{languages_formatted}**.
@@ -185,39 +169,19 @@ jobs:
           _Atualizado automaticamente via Python Script (Histórico Global)._
           """
 
-          # Formata limpando indentações indesejadas geradas pelo heredoc do terminal
           custom_text = "\n".join([line.strip() for line in custom_text_raw.strip().split("\n")])
 
-          # 🧼 MECANISMO ANTI-DUPLICIDADE TOTAL (Baseado em fatiamento de strings pura)
+          # Leitura do README atual
           with open(readme_file, "r", encoding="utf-8") as f:
               readme_content = f.read()
 
-          start_tag = ""
-          end_tag = ""
+          # 🧼 LIMPEZA TOTAL ANTI-DUPLICADOS: Remove todas as tags antigas ou bagunçadas do arquivo antes de reescrever
+          cleaned_content = re.sub(r".*?", "", readme_content, flags=re.DOTALL)
+          cleaned_content = cleaned_content.replace("", "").replace("", "")
 
-          # Se houver qualquer bagunça ou duplicados, limpamos tudo do arquivo antes de injetar o novo
-          if start_tag in readme_content and end_tag in readme_content:
-              parts = readme_content.split(start_tag, 1)
-              before_stats = parts[0]
-              after_start = parts[1]
-              
-              if end_tag in after_start:
-                  after_stats_parts = after_start.split(end_tag, 1)
-                  after_stats = after_stats_parts[1]
-                  
-                  # Remove qualquer outra tag orfã ou duplicada perdida pelo arquivo
-                  before_stats = before_stats.replace(start_tag, "").replace(end_tag, "")
-                  after_stats = after_stats.replace(start_tag, "").replace(end_tag, "")
-                  
-                  updated_content = before_stats.rstrip() + "\n\n" + custom_text + "\n\n" + after_stats.lstrip()
-              else:
-                  readme_content = readme_content.replace(start_tag, "").replace(end_tag, "")
-                  updated_content = readme_content.rstrip() + "\n\n" + custom_text
-          else:
-              readme_content = readme_content.replace(start_tag, "").replace(end_tag, "")
-              updated_content = readme_content.rstrip() + "\n\n" + custom_text
+          # Une o conteúdo original limpo ao bloco novo sem repetições
+          updated_content = cleaned_content.rstrip() + "\n\n" + custom_text + "\n"
 
-          # Escreve o resultado perfeitamente limpo de volta
           with open(readme_file, "w", encoding="utf-8") as f:
               f.write(updated_content)
           print("README.md atualizado com sucesso e livre de duplicatas!")
