@@ -142,22 +142,24 @@ jobs:
           with open(readme_file, "r", encoding="utf-8") as f:
               readme_content = f.read()
 
-          tag_start = ""
-          tag_end = ""
+          tag_start = "<!-- START_STATS -->"
+          tag_end = "<!-- END_STATS -->"
 
           if tag_start in readme_content and tag_end in readme_content:
-              # Localiza os índices exatos de início e fim dos delimitadores
+              # Remove resíduos colados nas tags para alinhar os ponteiros
               start_idx = readme_content.find(tag_start) + len(tag_start)
               end_idx = readme_content.find(tag_end)
               
-              # Garante que a ordem das tags está correta
               if start_idx <= end_idx:
-                  # Fatia o arquivo mantendo tudo antes e depois, injetando o payload no meio
-                  updated_content = readme_content[:start_idx] + "\n" + stats_content.strip() + "\n" + readme_content[end_idx:]
+                  # Força a reconstrução limpando o miolo antigo e injetando o novo com espaçamento limpo
+                  before = readme_content[:start_idx].rstrip()
+                  after = readme_content[end_idx:].lstrip()
+                  
+                  updated_content = f"{before}\n\n{stats_content.strip()}\n\n{after}"
                   
                   with open(readme_file, "w", encoding="utf-8") as f:
                       f.write(updated_content)
-                  print("README atualizado com sucesso via index slice!")
+                  print("README atualizado com sucesso e blocos antigos limpos!")
               else:
                   print("Erro: A tag de fim está posicionada antes da tag de início.")
                   exit(1)
