@@ -146,15 +146,21 @@ jobs:
           tag_end = ""
 
           if tag_start in readme_content and tag_end in readme_content:
-              parts = readme_content.split(tag_start, 1)
-              before = parts[0]
-              after = parts[1].split(tag_end, 1)[1]
+              # Localiza os índices exatos de início e fim dos delimitadores
+              start_idx = readme_content.find(tag_start) + len(tag_start)
+              end_idx = readme_content.find(tag_end)
               
-              updated_content = f"{before}{tag_start}{stats_content}{tag_end}{after}"
-              
-              with open(readme_file, "w", encoding="utf-8") as f:
-                  f.write(updated_content)
-              print("README atualizado com sucesso!")
+              # Garante que a ordem das tags está correta
+              if start_idx <= end_idx:
+                  # Fatia o arquivo mantendo tudo antes e depois, injetando o payload no meio
+                  updated_content = readme_content[:start_idx] + "\n" + stats_content.strip() + "\n" + readme_content[end_idx:]
+                  
+                  with open(readme_file, "w", encoding="utf-8") as f:
+                      f.write(updated_content)
+                  print("README atualizado com sucesso via index slice!")
+              else:
+                  print("Erro: A tag de fim está posicionada antes da tag de início.")
+                  exit(1)
           else:
               print("Erro de barreira: As tags protetoras não foram encontradas no README.md!")
               exit(1)
