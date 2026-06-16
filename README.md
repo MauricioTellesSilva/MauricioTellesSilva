@@ -40,3 +40,7 @@ Design de Animação-Uninter
 _Atualizado automaticamente via Python Script (metrics.yml)._
 
 <!-- END_STATS -->
+
+<p align="center">
+  <img src="assets/ascii_cube_donut.gif" alt="ASCII Donut">
+</p>
