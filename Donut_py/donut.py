@@ -108,7 +108,7 @@ for frame in range(FRAMES):
     for y in range(H):
         txt += "".join(screen[y * W:(y + 1) * W]) + "\n"
 
-    img = Image.new("RGB", (W * SCALE, H * SCALE), "black")
+    img = Image.new("RGB", (W * SCALE, H * SCALE), "#0D1117")
     d = ImageDraw.Draw(img)
 
     box = d.multiline_textbbox((0, 0), txt, font=font)
