@@ -82,24 +82,82 @@ jobs:
           total_deletions = 0
           languages_map = {}
 
-          # 3. Extração de métricas por repositório filtrado
-          for repo_name, repo_owner in unique_repos:
-              try:
-                  resp = requests.get(f"https://api.github.com/repos/{repo_owner}/{repo_name}/stats/contributors", headers=headers)
-                  
-                  # Tratamento para o cache (HTTP 202 Accepted) do GitHub
-                  if resp.status_code == 202:
-                      time.sleep(2.5)
-                      resp = requests.get(f"https://api.github.com/repos/{repo_owner}/{repo_name}/stats/contributors", headers=headers)
+          def listar_branches(owner, repo):
+              """Retorna a lista de nomes de todas as branches do repositório (paginado)."""
+              branches = []
+              page = 1
+              while True:
+                  resp = requests.get(
+                      f"https://api.github.com/repos/{owner}/{repo}/branches?per_page=100&page={page}",
+                      headers=headers,
+                  )
+                  if resp.status_code != 200:
+                      break
+                  data = resp.json()
+                  if not data:
+                      break
+                  branches.extend(b["name"] for b in data)
+                  page += 1
+              return branches
 
-                  if resp.status_code == 200 and resp.json():
-                      for contributor in resp.json():
-                          if contributor.get("author", {}).get("login", "").lower() == username.lower():
-                              for week in contributor.get("weeks", []):
-                                  total_additions += week.get("a", 0)
-                                  total_deletions += week.get("d", 0)
+          def listar_commits_do_autor(owner, repo, branch):
+              """Retorna a lista de SHAs de commits do autor em uma branch específica (paginado)."""
+              shas = []
+              page = 1
+              while True:
+                  resp = requests.get(
+                      f"https://api.github.com/repos/{owner}/{repo}/commits",
+                      headers=headers,
+                      params={"sha": branch, "author": username, "per_page": 100, "page": page},
+                  )
+                  if resp.status_code != 200:
+                      break
+                  data = resp.json()
+                  if not isinstance(data, list) or not data:
+                      break
+                  shas.extend(c["sha"] for c in data)
+                  page += 1
+              return shas
+
+          # 3. Extração de métricas por repositório filtrado, varrendo TODAS as branches
+          for repo_name, repo_owner in unique_repos:
+              processed_shas = set()  # evita contar o mesmo commit 2x (commits compartilhados entre branches)
+
+              try:
+                  branches = listar_branches(repo_owner, repo_name)
               except:
-                  pass
+                  branches = []
+
+              for branch in branches:
+                  try:
+                      shas = listar_commits_do_autor(repo_owner, repo_name, branch)
+                  except:
+                      shas = []
+
+                  for sha in shas:
+                      if sha in processed_shas:
+                          continue
+                      processed_shas.add(sha)
+
+                      try:
+                          commit_resp = requests.get(
+                              f"https://api.github.com/repos/{repo_owner}/{repo_name}/commits/{sha}",
+                              headers=headers,
+                          )
+                          # Respeita o rate limit secundário da API de commits individuais
+                          if commit_resp.status_code == 403:
+                              time.sleep(2.5)
+                              commit_resp = requests.get(
+                                  f"https://api.github.com/repos/{repo_owner}/{repo_name}/commits/{sha}",
+                                  headers=headers,
+                              )
+
+                          if commit_resp.status_code == 200:
+                              stats = commit_resp.json().get("stats", {})
+                              total_additions += stats.get("additions", 0)
+                              total_deletions += stats.get("deletions", 0)
+                      except:
+                          pass
 
               # Coleta de volumetria de linguagens
               try:
