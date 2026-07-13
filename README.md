@@ -31,10 +31,10 @@ Design de Animação-Uninter
 ### 📈 Minhas Estatísticas de Desenvolvimento
 
 
-* 🚀 **Repositorios:** Já contribuí com um total de **189 commits**.
-* 🔀 **Pulls:** Foram abertos **9 Pull Requests**.
-* 📊 **Commits:** nos meus repositórios, movimentei um total de $\color{#2ea44f}{\mathbf{+11,692}}$ **linhas adicionadas** e $\color{#f85149}{\mathbf{-7,299}}$ **linhas removidas**.
-* 💻 **linguagens utilizadas:** Participacao de linguagens utilizadas:**Java (60.1%), HTML (39.9%)**.
+* 🚀 **Repositorios:** Já contribuí com um total de **204 commits**.
+* 🔀 **Pulls:** Foram abertos **12 Pull Requests**.
+* 📊 **Commits:** nos meus repositórios, movimentei um total de $\color{#2ea44f}{\mathbf{+26,135}}$ **linhas adicionadas** e $\color{#f85149}{\mathbf{-12,281}}$ **linhas removidas**.
+* 💻 **linguagens utilizadas:** Participacao de linguagens utilizadas:**Java (58.5%), HTML (41.5%)**.
 
 
 _Atualizado automaticamente via Python Script (metrics.yml)._
