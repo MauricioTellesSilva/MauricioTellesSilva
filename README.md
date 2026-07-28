@@ -27,19 +27,26 @@ Análise e Desenvolvimento de Sistemas-IFSC
 Design de Animação-Uninter
 
 <!-- START_STATS -->
-
-### 📈 Minhas Estatísticas de Desenvolvimento
-
-
-* 🚀 **Repositorios:** Já contribuí com um total de **213 commits**.
-* 🔀 **Pulls:** Foram abertos **12 Pull Requests**.
-* 📊 **Commits:** nos meus repositórios, movimentei um total de $\color{#2ea44f}{\mathbf{+26,150}}$ **linhas adicionadas** e $\color{#f85149}{\mathbf{-12,285}}$ **linhas removidas**.
-* 💻 **linguagens utilizadas:** Participacao de linguagens utilizadas:**Java (58.5%), HTML (41.5%)**.
-
-
-_Atualizado automaticamente via Python Script (metrics.yml)._
-
 <!-- END_STATS -->
+
+# Materias IFSC
+>Materias realizadas da graduação em ADS no IFSC separadas por semestre
+
+## 1⁰ Semestre
+
+- **Pensamento Computacional e Algoritimos:** [ ALG ](https://github.com/MauricioTellesSilva/ALG)
+- **Introdução À Computação:** [ ICO ](https://github.com/MauricioTellesSilva/ADS-ifsc-ICO-2026-1) 
+
+## 2⁰ Semestre
+
+- **Programação Orientada a Objetos:** [ POO ](https://github.com/MauricioTellesSilva/poo)
+- **Programação FrontEnd 1:** [ FE1 ](https://github.com/MauricioTellesSilva/ADS-IFSC-FEI-2026-2)
+
+# Projetos Pessoais
+
+- **Ultimate Viewer:** [ UVR ](https://github.com/MauricioTellesSilva/Visualizador-3D)
+- **Readme Metrics:** [ RM ](https://github.com/MauricioTellesSilva/MauricioTellesSilva/blob/main/.github/workflows/metrics.yml)
+
 
 <p align="center">
   <img src="assets/ascii_cube_donut.gif" alt="ASCII Donut">
