@@ -15,11 +15,7 @@ Meu perfil no Artstation é:🖼
 https://www.artstation.com/mauriciotellessilva
 
 
-Trabalhando em um portifolio personalizado....
-
-
-Estou me formando em:🎓
-
+Estou me formando em:
 
 Análise e Desenvolvimento de Sistemas-IFSC
 
@@ -27,18 +23,6 @@ Análise e Desenvolvimento de Sistemas-IFSC
 Design de Animação-Uninter
 
 <!-- START_STATS -->
-
-### 📈 Minhas Estatísticas de Desenvolvimento
-
-
-* 🚀 **Repositorios:** Já contribuí com um total de **214 commits**.
-* 🔀 **Pulls:** Foram abertos **12 Pull Requests**.
-* 📊 **Commits:** nos meus repositórios, movimentei um total de $\color{#2ea44f}{\mathbf{+26,150}}$ **linhas adicionadas** e $\color{#f85149}{\mathbf{-12,285}}$ **linhas removidas**.
-* 💻 **linguagens utilizadas:** Participacao de linguagens utilizadas:**Java (58.5%), HTML (41.5%)**.
-
-
-_Atualizado automaticamente via Python Script (metrics.yml)._
-
 <!-- END_STATS -->
 
 # Materias IFSC
@@ -56,8 +40,8 @@ _Atualizado automaticamente via Python Script (metrics.yml)._
 
 # Projetos Pessoais
 
-- **Ultimate Viewer:** [ UVR ](https://github.com/MauricioTellesSilva/Visualizador-3D)
-- **Readme Metrics:** [ RM ](https://github.com/MauricioTellesSilva/MauricioTellesSilva/blob/main/.github/workflows/metrics.yml)
+- **Ultimate Viewer:** [ UVweb ](https://github.com/MauricioTellesSilva/Visualizador-3D)
+- **Readme Metrics:** [ RdM ](https://github.com/MauricioTellesSilva/MauricioTellesSilva/blob/main/.github/workflows/metrics.yml)
 
 
 <p align="center">
