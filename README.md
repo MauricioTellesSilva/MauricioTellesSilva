@@ -29,7 +29,7 @@ Design de Animação-Uninter
 
 * 🚀 **Repositorios:** Já contribuí com um total de **313 commits**.
 * 🔀 **Pulls:** Foram abertos **17 Pull Requests**.
-* 📊 **Commits:** nos meus repositórios, movimentei um total de $\color{#2ea44f}{\mathbf{+40,625}}$ **linhas adicionadas** e $\color{#f85149}{\mathbf{-14,616}}$ **linhas removidas**.
+* 📊 **Commits:** nos meus repositórios, movimentei um total de $\color{#2ea44f}{\mathbf{+41,120}}$ **linhas adicionadas** e $\color{#f85149}{\mathbf{-14,801}}$ **linhas removidas**.
 * 💻 **linguagens utilizadas:** Participacao de linguagens utilizadas:**JavaScript (52.5%), Java (39.3%), HTML (5.0%), CSS (3.2%)**.
 
 
