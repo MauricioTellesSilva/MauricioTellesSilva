@@ -22,6 +22,18 @@ Análise e Desenvolvimento de Sistemas-IFSC
 Design de Animação-Uninter
 
 <!-- START_STATS -->
+
+### 📈 Minhas Estatísticas de Desenvolvimento
+
+
+* 🚀 **Repositorios:** Já contribuí com um total de **479 commits**.
+* 🔀 **Pulls:** Foram abertos **23 Pull Requests**.
+* 📊 **Commits:** nos meus repositórios, movimentei um total de $\color{#2ea44f}{\mathbf{+419,007}}$ **linhas adicionadas** e $\color{#f85149}{\mathbf{-68,526}}$ **linhas removidas**.
+* 💻 **linguagens utilizadas:** Participacao de linguagens utilizadas:**TypeScript (44.1%), JavaScript (25.6%), C# (24.2%), CSS (2.9%)**.
+
+
+_Atualizado automaticamente via Python Script (metrics.yml)._
+
 <!-- END_STATS -->
 
 # Materias IFSC
