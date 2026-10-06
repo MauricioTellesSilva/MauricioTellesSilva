@@ -24,6 +24,37 @@
 
 
 <!-- START_STATS -->
+
+```text
++------------------------------------------------------------+
+| MAURICIO TELLES / GITHUB STATS                             |
+| code + 3D / minha jornada em numeros                       |
++------------------------------------------------------------+
+| ACTIVITY                                                   |
+|   Commits           : 485                                  |
+|   Pull requests     : 23                                   |
+|   Repos analisados  : 7                                    |
++------------------------------------------------------------+
+| CODE CHANGES                                               |
+|   Linhas adicionadas: +419.007                             |
+|   Linhas removidas  : -68.526                              |
++------------------------------------------------------------+
+| LANGUAGES / TOP 4                                          |
+|   TypeScript   [#########-----------]  44,1%               |
+|   JavaScript   [#####---------------]  25,6%               |
+|   C#           [#####---------------]  24,2%               |
+|   CSS          [#-------------------]   2,9%               |
++------------------------------------------------------------+
+| UPDATED / 06/10/2026 03:37 UTC                             |
++------------------------------------------------------------+
+```
+
+<sub>Top 4 por volume de código em bytes; os percentuais consideram todas as linguagens dos repositórios analisados.</sub>
+
+<sub>Commits e pull requests: histórico do autor no GitHub. Linhas: commits do autor em todas as branches dos repositórios analisados, sem duplicar commits compartilhados. Forks e este repositório de perfil ficam fora da análise de código.</sub>
+
+<sub>Atualizado automaticamente via [GitHub Actions](.github/workflows/metrics.yml).</sub>
+
 <!-- END_STATS -->
 
 ## 🎓 Minha jornada no IFSC
