@@ -194,9 +194,6 @@ jobs:
 
           # 6. Painel ASCII em bloco monoespaçado, com bordas de largura dinâmica
           panel_lines = [
-              "MAURICIO TELLES / GITHUB STATS",
-              "code + 3D / minha jornada em numeros",
-              None,
               "ACTIVITY",
               f"  Commits           : {format_number(search_commits_count)}",
               f"  Pull requests     : {format_number(total_prs)}",
