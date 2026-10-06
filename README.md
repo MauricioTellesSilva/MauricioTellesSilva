@@ -21,69 +21,9 @@
 }
 ``` 
 
-## 📊 Minha atividade no GitHub
+
 
 <!-- START_STATS -->
-
-<<<<<<< HEAD
-```text
-+------------------------------------------------------------+
-| MAURICIO TELLES / GITHUB STATS                             |
-| code + 3D / minha jornada em numeros                       |
-+------------------------------------------------------------+
-| ACTIVITY                                                   |
-|   Commits           : 479                                  |
-|   Pull requests     : 23                                   |
-|   Repos analisados  : -                                    |
-+------------------------------------------------------------+
-| CODE CHANGES                                               |
-|   Linhas adicionadas: +419.007                             |
-|   Linhas removidas  : -68.526                              |
-+------------------------------------------------------------+
-| LANGUAGES / TOP 4                                          |
-|   TypeScript   [#########-----------]  44,1%               |
-|   JavaScript   [#####---------------]  25,6%               |
-|   C#           [#####---------------]  24,2%               |
-|   CSS          [#-------------------]   2,9%               |
-+------------------------------------------------------------+
-| UPDATED / ultima execucao (data indisponivel)              |
-+------------------------------------------------------------+
-```
-
-<sub>Top 4 por volume de código em bytes; os percentuais consideram todas as linguagens dos repositórios analisados.</sub>
-
-<sub>Commits e pull requests: histórico do autor no GitHub. Linhas: commits do autor em todas as branches dos repositórios analisados, sem duplicar commits compartilhados. Forks e este repositório de perfil ficam fora da análise de código.</sub>
-
-<sub>Atualizado automaticamente via [GitHub Actions](.github/workflows/metrics.yml).</sub>
-=======
-> Cada commit faz parte da minha jornada entre código e criação.
-
-| 🚀 Commits | 🔀 Pull requests | 📂 Repositórios analisados |
-| :---: | :---: | :---: |
-| **480** | **23** | **7** |
-
-#### 🧩 Código em movimento
-
-| Linhas adicionadas | Linhas removidas |
-| :---: | :---: |
-| $\color{#2ea44f}{\mathbf{+419.007}}$ | $\color{#f85149}{\mathbf{-68.526}}$ |
-
-#### 💻 Linguagens nos meus repositórios
-
-| Linguagem | Distribuição | Participação |
-| :--- | :--- | ---: |
-| **TypeScript** | `█████████░░░░░░░░░░░` | **44,1%** |
-| **JavaScript** | `█████░░░░░░░░░░░░░░░` | **25,6%** |
-| **C#** | `█████░░░░░░░░░░░░░░░` | **24,2%** |
-| **CSS** | `█░░░░░░░░░░░░░░░░░░░` | **2,9%** |
-
-<sub>Top 4 por volume de código em bytes; os percentuais consideram todas as linguagens dos repositórios analisados.</sub>
-
-<sub>Commits e pull requests: histórico do autor no GitHub. Linhas: commits do autor em todas as branches dos repositórios analisados, sem duplicar commits compartilhados. Forks e este repositório de perfil ficam fora da análise de código.</sub>
-
-<sub>↻ Atualizado em 06/10/2026 às 03:30 UTC · [GitHub Actions](.github/workflows/metrics.yml)</sub>
->>>>>>> 852083baabf5faadb634947b66a3a23048da6c21
-
 <!-- END_STATS -->
 
 ## 🎓 Minha jornada no IFSC
