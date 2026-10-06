@@ -25,16 +25,35 @@
 
 <!-- START_STATS -->
 
-### 📈 Minhas Estatísticas de Desenvolvimento
+```text
++------------------------------------------------------------+
+| MAURICIO TELLES / GITHUB STATS                             |
+| code + 3D / minha jornada em numeros                       |
++------------------------------------------------------------+
+| ACTIVITY                                                   |
+|   Commits           : 479                                  |
+|   Pull requests     : 23                                   |
+|   Repos analisados  : -                                    |
++------------------------------------------------------------+
+| CODE CHANGES                                               |
+|   Linhas adicionadas: +419.007                             |
+|   Linhas removidas  : -68.526                              |
++------------------------------------------------------------+
+| LANGUAGES / TOP 4                                          |
+|   TypeScript   [#########-----------]  44,1%               |
+|   JavaScript   [#####---------------]  25,6%               |
+|   C#           [#####---------------]  24,2%               |
+|   CSS          [#-------------------]   2,9%               |
++------------------------------------------------------------+
+| UPDATED / ultima execucao (data indisponivel)              |
++------------------------------------------------------------+
+```
 
+<sub>Top 4 por volume de código em bytes; os percentuais consideram todas as linguagens dos repositórios analisados.</sub>
 
-* 🚀 **Repositorios:** Já contribuí com um total de **479 commits**.
-* 🔀 **Pulls:** Foram abertos **23 Pull Requests**.
-* 📊 **Commits:** nos meus repositórios, movimentei um total de $\color{#2ea44f}{\mathbf{+419,007}}$ **linhas adicionadas** e $\color{#f85149}{\mathbf{-68,526}}$ **linhas removidas**.
-* 💻 **linguagens utilizadas:** Participacao de linguagens utilizadas:**TypeScript (44.1%), JavaScript (25.6%), C# (24.2%), CSS (2.9%)**.
+<sub>Commits e pull requests: histórico do autor no GitHub. Linhas: commits do autor em todas as branches dos repositórios analisados, sem duplicar commits compartilhados. Forks e este repositório de perfil ficam fora da análise de código.</sub>
 
-
-_Atualizado automaticamente via Python Script (metrics.yml)._
+<sub>Atualizado automaticamente via [GitHub Actions](.github/workflows/metrics.yml).</sub>
 
 <!-- END_STATS -->
 

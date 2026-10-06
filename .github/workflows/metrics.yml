@@ -34,7 +34,7 @@ jobs:
           import re
           import time
           from datetime import datetime, timezone
-          from html import escape
+          import unicodedata
 
           token = os.getenv("GH_TOKEN")
           username = os.getenv("GH_USERNAME")
@@ -59,7 +59,7 @@ jobs:
           except:
               pass
 
-          total_prs = "Disponível no painel"
+          total_prs = "Indisponivel"
           try:
               pr_search = requests.get(f"https://api.github.com/search/issues?q=author:{username}+type:pr", headers=headers).json()
               if isinstance(pr_search, dict) and "total_count" in pr_search:
@@ -179,53 +179,56 @@ jobs:
                   continue
               percentage = bytes_count / total_bytes * 100
               filled = max(0, min(20, round(percentage / 5)))
-              bar = "█" * filled + "░" * (20 - filled)
-              label = escape(lang).replace("|", "&#124;")
+              bar = "#" * filled + "-" * (20 - filled)
+              label = unicodedata.normalize("NFKD", lang).encode("ascii", "replace").decode("ascii")
               percentage_text = f"{percentage:.1f}".replace(".", ",")
-              language_rows.append(f"| **{label}** | `{bar}` | **{percentage_text}%** |")
+              language_rows.append((label, bar, percentage_text))
 
-          # 5. Números em formato brasileiro e cores para alterações de código
+          # 5. Números em formato brasileiro
           def format_number(value):
               return f"{value:,}".replace(",", ".") if isinstance(value, int) else str(value)
 
           str_additions = format_number(total_additions)
           str_deletions = format_number(total_deletions)
-          verde_add = "$\\color{#2ea44f}{\\mathbf{+" + str_additions + "}}$"
-          vermelho_del = "$\\color{#f85149}{\\mathbf{-" + str_deletions + "}}$"
-          updated_at = datetime.now(timezone.utc).strftime("%d/%m/%Y às %H:%M UTC")
+          updated_at = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M UTC")
 
-          # 6. Template sem recuo para renderizar tabelas corretamente no GitHub
-          stats_lines = [
-              "> Cada commit faz parte da minha jornada entre código e criação.",
-              "",
-              "| 🚀 Commits | 🔀 Pull requests | 📂 Repositórios analisados |",
-              "| :---: | :---: | :---: |",
-              f"| **{format_number(search_commits_count)}** | **{format_number(total_prs)}** | **{format_number(len(unique_repos))}** |",
-              "",
-              "#### 🧩 Código em movimento",
-              "",
-              "| Linhas adicionadas | Linhas removidas |",
-              "| :---: | :---: |",
-              f"| {verde_add} | {vermelho_del} |",
-              "",
-              "#### 💻 Linguagens nos meus repositórios",
-              "",
+          # 6. Painel ASCII em bloco monoespaçado, com bordas de largura dinâmica
+          panel_lines = [
+              "MAURICIO TELLES / GITHUB STATS",
+              "code + 3D / minha jornada em numeros",
+              None,
+              "ACTIVITY",
+              f"  Commits           : {format_number(search_commits_count)}",
+              f"  Pull requests     : {format_number(total_prs)}",
+              f"  Repos analisados  : {format_number(len(unique_repos))}",
+              None,
+              "CODE CHANGES",
+              f"  Linhas adicionadas: +{str_additions}",
+              f"  Linhas removidas  : -{str_deletions}",
+              None,
+              "LANGUAGES / TOP 4",
           ]
           if language_rows:
-              stats_lines.extend([
-                  "| Linguagem | Distribuição | Participação |",
-                  "| :--- | :--- | ---: |",
-                  *language_rows,
-                  "",
-                  "<sub>Top 4 por volume de código em bytes; os percentuais consideram todas as linguagens dos repositórios analisados.</sub>",
-              ])
+              label_width = max(12, max(len(label) for label, _, _ in language_rows))
+              for label, bar, percentage_text in language_rows:
+                  panel_lines.append(f"  {label:<{label_width}} [{bar}] {percentage_text:>5}%")
           else:
-              stats_lines.append("_Nenhum dado de linguagens disponível nesta atualização._")
+              panel_lines.append("  Dados indisponiveis nesta atualizacao.")
+          panel_lines.extend([None, f"UPDATED / {updated_at}"])
+          panel_width = max(58, max(len(line) for line in panel_lines if line is not None))
+          border = "+" + "-" * (panel_width + 2) + "+"
+          stats_lines = ["```text", border]
+          for line in panel_lines:
+              stats_lines.append(border if line is None else f"| {line:<{panel_width}} |")
           stats_lines.extend([
+              border,
+              "```",
+              "",
+              "<sub>Top 4 por volume de código em bytes; os percentuais consideram todas as linguagens dos repositórios analisados.</sub>",
               "",
               "<sub>Commits e pull requests: histórico do autor no GitHub. Linhas: commits do autor em todas as branches dos repositórios analisados, sem duplicar commits compartilhados. Forks e este repositório de perfil ficam fora da análise de código.</sub>",
               "",
-              f"<sub>↻ Atualizado em {updated_at} · [GitHub Actions](.github/workflows/metrics.yml)</sub>",
+              "<sub>Atualizado automaticamente via [GitHub Actions](.github/workflows/metrics.yml).</sub>",
           ])
           stats_content = "\n".join(stats_lines)
           # 7. Parser Posicional e Escrita Segura
