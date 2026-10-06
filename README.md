@@ -1,48 +1,62 @@
+<div align="center">
 
+```text
+    █▄ ▄█ ▄▀▀▄ █  █ █▀▀▄ █ ▄▀▀▄ █ ▄▀▀▀▄      ▀▀█▀▀ █▀▀▀ █    █    █▀▀▀ ▄▀▀▀
+    █ ▀ █ █▀▀█ █  █ █▀▀▄ █ █  ▄ █ █   █        █   █▀▀  █    █    █▀▀   ▀▀▄
+   ▀   ▀ ▀  ▀  ▀▀  ▀  ▀ ▀  ▀▀  ▀  ▀▀▀         ▀   ▀▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀
 ```
-    █▄ ▄█ ▄▀▀▄ █  █ █▀▀▄ █ ▄▀▀▄ █ ▄▀▀▀▄      ▀▀█▀▀ █▀▀▀ █    █    █▀▀▀ ▄▀▀▀      ▄▀▀▀ █ █    █   █ ▄▀▀▄    
-    █ ▀ █ █▀▀█ █  █ █▀▀▄ █ █  ▄ █ █   █        █   █▀▀  █    █    █▀▀   ▀▀▄       ▀▀▄ █ █     █ █  █▀▀█    
-    ▀   ▀ ▀  ▀  ▀▀  ▀  ▀ ▀  ▀▀  ▀  ▀▀▀         ▀   ▀▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀       ▀▀▀  ▀ ▀▀▀▀   ▀   ▀  ▀                        
-```
 
-Sou um animador 2D e 3D 🎬
+### Full-stack dev/3D Generalist
 
+</div>
 
-Meu perfil no Artstation é:🖼
+```json
+{
+  "focus":"3D->Hard Surface, Programming->Back-end",
+  "education":["ADS-IFSC","Design de Animação-UNINTER"],
+  "3D Stack":["Blender","Zbrush","Substance Painter","3Ds Max"],
+  "Programming Stack":["Node.js","React","C#","TypeScript","Java"],
+  "Want to Learn":["Rust","VFX"],
+  "Old Github Account":"https://github.com/MauricioTSBichels"
+}
+``` 
 
-
-https://www.artstation.com/mauriciotellessilva
-
-
-Estou me formando em:
-
-Análise e Desenvolvimento de Sistemas-IFSC
-
-
-Design de Animação-Uninter
+## 📊 Minha atividade no GitHub
 
 <!-- START_STATS -->
 <!-- END_STATS -->
 
-# Materias IFSC
->Materias realizadas da graduação em ADS no IFSC separadas por semestre
+## 🎓 Minha jornada no IFSC
 
-## 1⁰ Semestre
+Repositórios de estudos e atividades de Análise e Desenvolvimento de Sistemas, organizados por semestre.
 
-- **Pensamento Computacional e Algoritimos:** [ ALG ](https://github.com/MauricioTellesSilva/ALG)
-- **Introdução À Computação:** [ ICO ](https://github.com/MauricioTellesSilva/ADS-ifsc-ICO-2026-1) 
+### 1º semestre · Fundamentos
 
-## 2⁰ Semestre
+| Disciplina | Repositório |
+| --- | --- |
+| Pensamento Computacional e Algoritmos | [ALG](https://github.com/MauricioTellesSilva/ALG) |
+| Introdução à Computação | [ICO](https://github.com/MauricioTellesSilva/ADS-ifsc-ICO-2026-1) |
 
-- **Programação Orientada a Objetos:** [ POO ](https://github.com/MauricioTellesSilva/poo)
-- **Programação FrontEnd 1:** [ FE1 ](https://github.com/MauricioTellesSilva/ADS-IFSC-FEI-2026-2)
+### 2º semestre · Programação e interfaces
 
-# Projetos Pessoais
+| Disciplina | Repositório |
+| --- | --- |
+| Programação Orientada a Objetos | [POO](https://github.com/MauricioTellesSilva/poo) |
+| Programação Front-end I | [FE1](https://github.com/MauricioTellesSilva/ADS-IFSC-FEI-2026-2) |
 
-- **Ultimate Viewer:** [ UVweb ](https://github.com/MauricioTellesSilva/Visualizador-3D)
-- **Readme Metrics:** [ RdM ](https://github.com/MauricioTellesSilva/MauricioTellesSilva/blob/main/.github/workflows/metrics.yml)
+## 🛠️ Projetos e experimentos
+
+### Readme Metrics
+
+Automação em **Python e GitHub Actions** que consulta a API do GitHub e atualiza as estatísticas deste perfil. Um projeto para explorar APIs, processamento de dados e automação na prática.
+
+↳ [Ver o workflow](.github/workflows/metrics.yml)
 
 
 <p align="center">
-  <img src="assets/ascii_cube_donut.gif" alt="ASCII Donut">
+  <img src="assets/ascii_cube_donut.gif" alt="Animação em ASCII de um cubo se transformando em um donut e voltando a ser cubo">
 </p>
+
+## 🖼️ Portfólio 3D
+
+Meus trabalhos visuais também estão no [ArtStation](https://www.artstation.com/mauriciotellessilva).

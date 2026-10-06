@@ -33,6 +33,8 @@ jobs:
           import requests
           import re
           import time
+          from datetime import datetime, timezone
+          from html import escape
 
           token = os.getenv("GH_TOKEN")
           username = os.getenv("GH_USERNAME")
@@ -168,34 +170,64 @@ jobs:
               except:
                   pass
 
-          # 4. Processamento do Top 4 de linguagens dominantes
+          # 4. Distribuição das quatro linguagens com maior volume de código
           total_bytes = sum(languages_map.values())
           sorted_langs = sorted(languages_map.items(), key=lambda x: x[1], reverse=True)[:4]
-          lang_text = [f"{lang} ({(bytes_count / total_bytes) * 100:.1f}%)" for lang, bytes_count in sorted_langs if total_bytes > 0]
-          languages_formatted = ", ".join(lang_text) if lang_text else "Identificando..."
+          language_rows = []
+          for lang, bytes_count in sorted_langs:
+              if total_bytes <= 0:
+                  continue
+              percentage = bytes_count / total_bytes * 100
+              filled = max(0, min(20, round(percentage / 5)))
+              bar = "█" * filled + "░" * (20 - filled)
+              label = escape(lang).replace("|", "&#124;")
+              percentage_text = f"{percentage:.1f}".replace(".", ",")
+              language_rows.append(f"| **{label}** | `{bar}` | **{percentage_text}%** |")
 
-          # 5. Formatação visual (Milhar e Cores via LaTeX)
-          str_additions = "{:,}".format(total_additions)
-          str_deletions = "{:,}".format(total_deletions)
+          # 5. Números em formato brasileiro e cores para alterações de código
+          def format_number(value):
+              return f"{value:,}".replace(",", ".") if isinstance(value, int) else str(value)
+
+          str_additions = format_number(total_additions)
+          str_deletions = format_number(total_deletions)
           verde_add = "$\\color{#2ea44f}{\\mathbf{+" + str_additions + "}}$"
           vermelho_del = "$\\color{#f85149}{\\mathbf{-" + str_deletions + "}}$"
+          updated_at = datetime.now(timezone.utc).strftime("%d/%m/%Y às %H:%M UTC")
 
-          # 6. Template de injeção Markdown
-          stats_content = f"""### 📈 Minhas Estatísticas de Desenvolvimento
-
-
-          * 🚀 **Repositorios:** Já contribuí com um total de **{search_commits_count} commits**.
-          * 🔀 **Pulls:** Foram abertos **{total_prs} Pull Requests**.
-          * 📊 **Commits:** nos meus repositórios, movimentei um total de {verde_add} **linhas adicionadas** e {vermelho_del} **linhas removidas**.
-          * 💻 **linguagens utilizadas:** Participacao de linguagens utilizadas:**{languages_formatted}**.
-
-
-          _Atualizado automaticamente via Python Script (metrics.yml)._
-          """
-
-
-
-
+          # 6. Template sem recuo para renderizar tabelas corretamente no GitHub
+          stats_lines = [
+              "> Cada commit faz parte da minha jornada entre código e criação.",
+              "",
+              "| 🚀 Commits | 🔀 Pull requests | 📂 Repositórios analisados |",
+              "| :---: | :---: | :---: |",
+              f"| **{format_number(search_commits_count)}** | **{format_number(total_prs)}** | **{format_number(len(unique_repos))}** |",
+              "",
+              "#### 🧩 Código em movimento",
+              "",
+              "| Linhas adicionadas | Linhas removidas |",
+              "| :---: | :---: |",
+              f"| {verde_add} | {vermelho_del} |",
+              "",
+              "#### 💻 Linguagens nos meus repositórios",
+              "",
+          ]
+          if language_rows:
+              stats_lines.extend([
+                  "| Linguagem | Distribuição | Participação |",
+                  "| :--- | :--- | ---: |",
+                  *language_rows,
+                  "",
+                  "<sub>Top 4 por volume de código em bytes; os percentuais consideram todas as linguagens dos repositórios analisados.</sub>",
+              ])
+          else:
+              stats_lines.append("_Nenhum dado de linguagens disponível nesta atualização._")
+          stats_lines.extend([
+              "",
+              "<sub>Commits e pull requests: histórico do autor no GitHub. Linhas: commits do autor em todas as branches dos repositórios analisados, sem duplicar commits compartilhados. Forks e este repositório de perfil ficam fora da análise de código.</sub>",
+              "",
+              f"<sub>↻ Atualizado em {updated_at} · [GitHub Actions](.github/workflows/metrics.yml)</sub>",
+          ])
+          stats_content = "\n".join(stats_lines)
           # 7. Parser Posicional e Escrita Segura
           with open(readme_file, "r", encoding="utf-8") as f:
               readme_content = f.read()
