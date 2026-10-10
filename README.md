@@ -25,25 +25,6 @@
 
 <!-- START_STATS -->
 
-```text
-+------------------------------------------------------------+
-| Atividade Global do GitHub                                 |
-|   Commits           : 0                                    |
-|   Pull requests     : Indisponivel                         |
-|   Repos analisados  : 0                                    |
-+------------------------------------------------------------+
-| Alterações de Código (Global)                              |
-|   Linhas adicionadas: +0                                   |
-|   Linhas removidas  : -0                                   |
-+------------------------------------------------------------+
-| LINGUAGENS / TOP 4                                         |
-|   Dados indisponiveis nesta atualizacao.                   |
-+------------------------------------------------------------+
-| Atualizado em / 10/10/2026 14:23 UTC                       |
-+------------------------------------------------------------+
-```
-<sub>Atualizado automaticamente via [GitHub Actions](.github/workflows/metrics.yml).</sub>
-
 <!-- END_STATS -->
 
 ## 🎓 Minha jornada no IFSC
