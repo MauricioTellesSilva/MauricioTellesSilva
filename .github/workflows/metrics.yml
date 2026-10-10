@@ -194,16 +194,16 @@ jobs:
 
           # 6. Painel ASCII em bloco monoespaçado, com bordas de largura dinâmica
           panel_lines = [
-              "ACTIVITY",
+              "Atividade Global do GitHub",
               f"  Commits           : {format_number(search_commits_count)}",
               f"  Pull requests     : {format_number(total_prs)}",
               f"  Repos analisados  : {format_number(len(unique_repos))}",
               None,
-              "CODE CHANGES",
+              "Alterações de Código (Global)",
               f"  Linhas adicionadas: +{str_additions}",
               f"  Linhas removidas  : -{str_deletions}",
               None,
-              "LANGUAGES / TOP 4",
+              "LINGUAGENS / TOP 4",
           ]
           if language_rows:
               label_width = max(12, max(len(label) for label, _, _ in language_rows))
@@ -211,7 +211,7 @@ jobs:
                   panel_lines.append(f"  {label:<{label_width}} [{bar}] {percentage_text:>5}%")
           else:
               panel_lines.append("  Dados indisponiveis nesta atualizacao.")
-          panel_lines.extend([None, f"UPDATED / {updated_at}"])
+          panel_lines.extend([None, f"Atualizado em / {updated_at}"])
           panel_width = max(58, max(len(line) for line in panel_lines if line is not None))
           border = "+" + "-" * (panel_width + 2) + "+"
           stats_lines = ["```text", border]
@@ -220,11 +220,6 @@ jobs:
           stats_lines.extend([
               border,
               "```",
-              "",
-              "<sub>Top 4 por volume de código em bytes; os percentuais consideram todas as linguagens dos repositórios analisados.</sub>",
-              "",
-              "<sub>Commits e pull requests: histórico do autor no GitHub. Linhas: commits do autor em todas as branches dos repositórios analisados, sem duplicar commits compartilhados. Forks e este repositório de perfil ficam fora da análise de código.</sub>",
-              "",
               "<sub>Atualizado automaticamente via [GitHub Actions](.github/workflows/metrics.yml).</sub>",
           ])
           stats_content = "\n".join(stats_lines)
