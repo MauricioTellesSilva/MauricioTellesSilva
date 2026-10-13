@@ -47,6 +47,17 @@ Repositórios de estudos e atividades de Análise e Desenvolvimento de Sistemas,
 
 ## 🛠️ Projetos e experimentos
 
+### UST Shader Tutorial
+
+Editor de shaders baseado em nós com preview 3D em tempo real e tutoriais guiados, extraído do **Ultimate Studio Tool (UST)**, meu editor de materiais em desenvolvimento. A interface é inspirada no Blender, mas o projeto é independente e todo escrito em **TypeScript**. Você monta o material conectando nós, o grafo é validado e compilado para GLSL, e o resultado aparece numa esfera de teste com **Three.js**.
+
+- **Stack:** React, TypeScript, Three.js, Vite
+- **Tutorial interativo:** passos avaliados a partir do estado real do grafo
+- **Sem backend:** roda no navegador, com importação e exportação em JSON
+- **Qualidade:** testes unitários, de integração e de navegador
+
+↳ [Ver o repositório](https://github.com/MauricioTellesSilva/ust-shader-tutorial)
+
 ### Readme Metrics
 
 Automação em **Python e GitHub Actions** que consulta a API do GitHub e atualiza as estatísticas deste perfil. Um projeto para explorar APIs, processamento de dados e automação na prática.
