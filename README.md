@@ -25,6 +25,28 @@
 
 <!-- START_STATS -->
 
+```text
++------------------------------------------------------------+
+| Atividade Global do GitHub                                 |
+|   Commits           : 495                                  |
+|   Pull requests     : 23                                   |
+|   Repos analisados  : 7                                    |
++------------------------------------------------------------+
+| Alterações de Código (Global)                              |
+|   Linhas adicionadas: +461.849                             |
+|   Linhas removidas  : -75.178                              |
++------------------------------------------------------------+
+| LINGUAGENS / TOP 4                                         |
+|   TypeScript   [#########-----------]  44,0%               |
+|   JavaScript   [#####---------------]  25,6%               |
+|   C#           [#####---------------]  24,2%               |
+|   CSS          [#-------------------]   2,9%               |
++------------------------------------------------------------+
+| Atualizado em / 12/10/2026 02:49 UTC                       |
++------------------------------------------------------------+
+```
+<sub>Atualizado automaticamente via [GitHub Actions](.github/workflows/metrics.yml).</sub>
+
 <!-- END_STATS -->
 
 ## 🎓 Minha jornada no IFSC
